@@ -11,116 +11,117 @@ pip install -r requirements.txt
 
 2. Configure device settings in api.py:
 ```python
-IP_ADDRESS = '192.168.37.11'
+IP_ADDRESS = '192.168.37.10'
 PORT = 4370
 TIMEOUT = 5
 ```
 
 ## API Endpoints
 
-### 1. Get All Attendance Records
+### 1. Get Device Information
 ```
-GET /attendance
+GET /device-info
 ```
-Returns all attendance records grouped by date and user.
+Returns device firmware version and serial number.
 
-### 2. Search Attendance by Date Range
+Response:
+```json
+{
+  "status": "success",
+  "data": {
+    "firmware_version": "6.60.401.5",
+    "serial_number": "ABC123456789"
+  }
+}
 ```
-GET /attendance/search
-```
-Parameters:
-- start_date (optional): Start date in YYYY-MM-DD format
-- end_date (optional): End date in YYYY-MM-DD format
 
-If no dates provided, returns all records.
-If only start_date, returns records from that date to now.
-If only end_date, returns all records up to that date.
-
-### 3. Search Attendance by User
-```
-GET /attendance/user
-```
-Parameters:
-- user_id (required): User ID to search for
-- start_date (optional): Start date in YYYY-MM-DD format
-- end_date (optional): End date in YYYY-MM-DD format
-
-### 4. Get User Information
-```
-GET /user/<user_id>
-```
-Returns information about a specific user.
-
-### 5. Get All Users
+### 2. Get All Users
 ```
 GET /users
 ```
 Returns list of all users registered in the device.
 
-## Response Format
-
-### Attendance Records
+Response:
 ```json
 {
   "status": "success",
   "data": [
     {
-      "attendancedate": "2024-12-08",
-      "records": [
-        {
-          "user_id": "123",
-          "user_name": "John Doe",
-          "attendance_records": [
-            {
-              "timestamp": "2024-12-08 09:00:00",
-              "punch_type": "Check In",
-              "punchtime": 0
-            }
-          ]
-        }
-      ],
-      "total_users": 1
-    }
-  ],
-  "total_days": 1
-}
-```
-
-### User Records
-```json
-{
-  "status": "success",
-  "user_info": {
-    "user_id": "123",
-    "user_name": "John Doe"
-  },
-  "data": [
-    {
-      "attendancedate": "2024-12-08",
-      "attendance_records": [
-        {
-          "timestamp": "2024-12-08 09:00:00",
-          "punch_type": "Check In",
-          "punchtime": 0
-        }
-      ],
-      "total_records": 1
+      "uid": "1",
+      "name": "John Doe",
+      "privilege": "User",
+      "password": "1234",
+      "card": "0"
     }
   ]
 }
 ```
 
-## Record Types
-- Check In (punchtime: 0)
-- Check Out (punchtime: 1)
+### 3. Get All Attendance Records
+```
+GET /attendance
+```
+Returns all attendance records with punch types.
 
-## Dependencies
-- Flask (3.1.0)
-- pyzk (0.9)
-- Flask-CORS (5.0.0)
+Response:
+```json
+{
+  "data": [
+    {
+      "emp_no": "1",
+      "device_id": "ABC123456789",
+      "punch_type": "1",  // 1=Check In, 2=Check Out, 3-6=Other punch types
+      "punch_date": "2024-12-02",
+      "punch_time": "2024-12-02 10:14:19"
+    }
+  ]
+}
+```
+
+Punch Type Values:
+- "1": Check In
+- "2": Check Out
+- "3": Punch Type 3
+- "4": Punch Type 4
+- "5": Punch Type 5
+- "6": Punch Type 6
+
+### 4. Get User Information and Attendance
+```
+GET /user/<user_id>
+```
+Returns information about a specific user and their attendance records.
+
+Response:
+```json
+{
+  "status": "success",
+  "data": {
+    "user_info": {
+      "uid": "1",
+      "name": "John Doe",
+      "privilege": "User",
+      "password": "1234",
+      "card": "0"
+    },
+    "attendance": {
+      "2024-12-02": {
+        "records": [
+          {
+            "time": "10:14:19",
+            "punch_type": "1"
+          }
+        ]
+      }
+    },
+    "total_attendance_records": 1
+  }
+}
+```
 
 ## Error Handling
-All endpoints return appropriate HTTP status codes and error messages:
+
+All endpoints return error responses in the following format:
 ```json
 {
   "status": "error",
@@ -128,8 +129,8 @@ All endpoints return appropriate HTTP status codes and error messages:
 }
 ```
 
-Common status codes:
-- 200: Success
-- 400: Bad Request (invalid parameters)
-- 404: Not Found (user or resource not found)
-- 500: Server Error
+Common error scenarios:
+- Device connection failure
+- Invalid user ID
+- Invalid date format
+- User not found
