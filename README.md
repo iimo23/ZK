@@ -119,6 +119,100 @@ Response:
 }
 ```
 
+### 5. Add Users to Device
+```
+POST /add-users
+```
+Adds new users to the device from a URL that returns a JSON array of users.
+
+Request Body:
+```json
+{
+  "url": "https://your-api-url/users"
+}
+```
+
+The URL should return a JSON array of users in the following format:
+```json
+[
+  {
+    "emp_id": "123",
+    "name": "John Doe"
+  },
+  {
+    "emp_id": "456",
+    "name": "Jane Smith"
+  }
+]
+```
+
+Response:
+```json
+{
+  "status": "success",
+  "data": {
+    "added_users": 5,
+    "failed_users": [
+      {
+        "emp_id": "123",
+        "name": "John Doe",
+        "error": "Error message"
+      }
+    ]
+  }
+}
+```
+
+### 5. Add Multiple Users
+```
+POST /users
+```
+Add multiple users to the device. Request body should contain an array of user objects.
+
+Request Body:
+```json
+{
+  "users": [
+    {
+      "emp_no": "123",
+      "name": "John Doe",
+      "privilege": "User",
+      "password": "1234"
+    }
+  ]
+}
+```
+
+### 6. Add Single User
+```
+POST /user
+```
+Add a single user to the device.
+
+Request Body:
+```json
+{
+  "emp_no": "123",
+  "name": "John Doe",
+  "privilege": "User",
+  "password": "1234"
+}
+```
+
+### 7. Delete User
+```
+DELETE /user/<emp_no>
+```
+Delete a user from the device by their employee number.
+
+Response:
+```json
+{
+  "status": "success",
+  "message": "User deleted successfully"
+}
+```
+
 ## Error Handling
 
 All endpoints return error responses in the following format:
@@ -134,3 +228,12 @@ Common error scenarios:
 - Invalid user ID
 - Invalid date format
 - User not found
+
+## Notes
+- The device connection settings (IP_ADDRESS, PORT, TIMEOUT) must be configured correctly in the api.py file
+- User privilege levels: "User", "Admin", "Supervisor"
+- All timestamps are returned in the local device timezone
+- The API uses Flask and requires Python 3.6 or higher
+
+## License
+This project is licensed under the MIT License.
