@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block title %}Device Management - ZK Device Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Device Information</h5>
+                <button class="btn btn-sm btn-outline-primary" id="refreshBtn">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="deviceInfo">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading device information...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Clear Attendance</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Clear all attendance records from the device.</p>
+                <button class="btn btn-warning w-100" id="clearAttendanceBtn">
+                    <i class="bi bi-trash"></i> Clear Attendance
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Clear All Data</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Clear all data from the device including users and attendance.</p>
+                <button class="btn btn-danger w-100" id="clearDataBtn">
+                    <i class="bi bi-trash"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Restart Device</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Restart the device remotely.</p>
+                <button class="btn btn-primary w-100" id="restartBtn">
+                    <i class="bi bi-power"></i> Restart Device
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Notification function
+    function showNotification(message, type = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.style.zIndex = 1050;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }, 5000);
+    }
+
+    // Load device info
+    async function loadDeviceInfo() {
+        const deviceInfoDiv = document.getElementById('deviceInfo');
+        
+        try {
+            deviceInfoDiv.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading device information...</p>
+                </div>
+            `;
+            
+            const response = await fetch('/api/device-info');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.message) {
+                deviceInfoDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        ${data.message}
+                    </div>
+                `;
+                return;
+            }
+            
+            // Format device info as a table
+            let html = '<table class="table table-striped">';
+            html += '<tbody>';
+            
+            const infoItems = [
+                { key: 'device_name', label: 'Device Name' },
+                { key: 'serial_number', label: 'Serial Number' },
+                { key: 'mac_address', label: 'MAC Address' },
+                { key: 'firmware_version', label: 'Firmware Version' },
+                { key: 'platform', label: 'Platform' },
+                { key: 'face_algorithm_version', label: 'Face Algorithm Version' },
+                { key: 'user_count', label: 'User Count' },
+                { key: 'face_count', label: 'Face Count' },
+                { key: 'fingerprint_count', label: 'Fingerprint Count' },
+                { key: 'attendance_count', label: 'Attendance Count' },
+                { key: 'device_time', label: 'Device Time' }
+            ];
+            
+            for (const item of infoItems) {
+                html += `
+                    <tr>
+                        <th>${item.label}</th>
+                        <td>${data[item.key] || 'N/A'}</td>
+                    </tr>
+                `;
+            }
+            
+            html += '</tbody></table>';
+            deviceInfoDiv.innerHTML = html;
+            
+        } catch (error) {
+            console.error('Error loading device info:', error);
+            deviceInfoDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading device information: ${error.message}
+                </div>
+            `;
+        }
+    }
+    
+    // Clear attendance
+    async function clearAttendance() {
+        if (!confirm('Are you sure you want to clear all attendance records? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/clear-attendance', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showNotification(data.message || 'Successfully cleared attendance records');
+                loadDeviceInfo();
+            } else {
+                throw new Error(data.message || 'Failed to clear attendance records');
+            }
+        } catch (error) {
+            console.error('Error clearing attendance:', error);
+            showNotification(`Error clearing attendance: ${error.message}`, 'danger');
+        }
+    }
+    
+    // Clear all data
+    async function clearData() {
+        if (!confirm('WARNING: Are you sure you want to clear ALL data including users and attendance? This action cannot be undone.')) {
+            return;
+        }
+        
+        if (!confirm('FINAL WARNING: This will delete ALL users and attendance records. Are you absolutely sure?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/clear-data', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showNotification(data.message || 'Successfully cleared all data');
+                loadDeviceInfo();
+            } else {
+                throw new Error(data.message || 'Failed to clear data');
+            }
+        } catch (error) {
+            console.error('Error clearing data:', error);
+            showNotification(`Error clearing data: ${error.message}`, 'danger');
+        }
+    }
+    
+    // Restart device
+    async function restartDevice() {
+        if (!confirm('Are you sure you want to restart the device?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/restart', {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showNotification(data.message || 'Successfully restarted device');
+            } else {
+                throw new Error(data.message || 'Failed to restart device');
+            }
+        } catch (error) {
+            console.error('Error restarting device:', error);
+            showNotification(`Error restarting device: ${error.message}`, 'danger');
+        }
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDeviceInfo();
+        
+        document.getElementById('refreshBtn').addEventListener('click', loadDeviceInfo);
+        document.getElementById('clearAttendanceBtn').addEventListener('click', clearAttendance);
+        document.getElementById('clearDataBtn').addEventListener('click', clearData);
+        document.getElementById('restartBtn').addEventListener('click', restartDevice);
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,40 @@
-# ZK Attendance API
+# ZK Attendance System
 
-A Flask-based REST API for managing attendance records from ZK biometric devices.
+A modern web interface for managing ZK biometric devices, featuring real-time attendance tracking, user management, and data export capabilities.
+
+## Features
+
+- **Real-time Dashboard**
+  - Device connection status
+  - User statistics
+  - Recent activity feed
+  - Dynamic activity filtering
+
+- **User Management**
+  - View all users
+  - Add/Delete users
+  - View user attendance history
+  - Bulk user operations
+
+- **Activity Monitoring**
+  - Real-time attendance tracking
+  - Filter by date range
+  - Filter by user
+  - Filter by punch type (Check In/Out)
+  - Advanced search capabilities
+
+- **Data Export**
+  - Customizable data export
+  - Date range selection
+  - User selection
+  - Preview before export
+  - Auto-export capability
+  - Custom endpoint configuration
+
+- **Settings Management**
+  - Device configuration
+  - Export settings
+  - System maintenance
 
 ## Setup
 
@@ -9,231 +43,207 @@ A Flask-based REST API for managing attendance records from ZK biometric devices
 pip install -r requirements.txt
 ```
 
-2. Configure device settings in api.py:
-```python
-IP_ADDRESS = '192.168.37.10'
-PORT = 4370
-TIMEOUT = 5
+2. Run the application:
+```bash
+python app.py
 ```
+
+3. Access the web interface:
+```
+http://localhost:5000
+```
+
+## Usage Guide
+
+### 1. Device Connection
+
+1. Click Settings in the navigation bar
+2. Enter device IP and Port
+3. Click "Save Device Settings"
+4. The connection status will be shown in the navigation bar
+
+### 2. User Management
+
+Access the Users page to:
+- View all registered users
+- Add new users
+- Delete existing users
+- View individual user attendance history
+
+### 3. Activity Monitoring
+
+The dashboard provides:
+- Real-time activity feed
+- Multiple filtering options:
+  - Date filters (Today, This Week, This Month)
+  - User search
+  - Punch type filters
+- Automatic refresh
+
+### 4. Data Export
+
+The Export page allows you to:
+1. Select date range:
+   - Quick selections (Today, This Week, This Month)
+   - Custom date range
+2. Select users:
+   - Individual users
+   - Multiple users
+   - All users
+3. Preview data before export
+4. Export to external system
+
+### 5. Settings
+
+The Settings page provides:
+1. Device Settings:
+   - IP Address
+   - Port number
+2. Export Settings:
+   - Export URL configuration
+   - Auto-export toggle
+3. System Settings:
+   - Clear data
+   - Reset settings
 
 ## API Endpoints
 
-### 1. Get Device Information
-```
-GET /device-info
-```
-Returns device firmware version and serial number.
+### Device Management
 
-Response:
+```
+GET /api/device-info
+```
+Returns current device connection information.
+
+```
+POST /api/connect
+```
+Connect to a device with specified IP and port.
+
+### User Management
+
+```
+GET /api/users
+```
+Returns list of all users.
+
+```
+POST /api/user
+```
+Add a new user.
+
+```
+DELETE /api/user/<user_id>
+```
+Delete a user.
+
+### Attendance Management
+
+```
+GET /api/attendance
+```
+Get attendance records with optional filters:
+- start_date
+- end_date
+- emp_no
+
+### Export Management
+
+```
+GET /api/export-config
+```
+Get current export configuration.
+
+```
+POST /api/export-config
+```
+Update export configuration:
 ```json
 {
-  "status": "success",
-  "data": {
-    "firmware_version": "6.60.401.5",
-    "serial_number": "ABC123456789"
-  }
+  "export_url": "https://your-endpoint.com/data",
+  "auto_export": false
 }
 ```
 
-### 2. Get All Users
 ```
-GET /users
+POST /api/export-attendance
 ```
-Returns list of all users registered in the device.
+Export attendance data to configured endpoint.
 
-Response:
+### Settings Management
+
+```
+POST /api/clear-data
+```
+Clear all stored data.
+
+```
+POST /api/reset-settings
+```
+Reset all settings to default.
+
+## Data Formats
+
+### Export Data Format
+
 ```json
 {
-  "status": "success",
-  "data": [
-    {
-      "uid": "1",
-      "name": "John Doe",
-      "privilege": "User",
-      "password": "1234",
-      "card": "0"
-    }
-  ]
-}
-```
-
-### 3. Get All Attendance Records
-```
-GET /attendance
-```
-Returns all attendance records with punch types.
-
-Response:
-```json
-{
-  "data": [
-    {
-      "emp_no": "1",
-      "device_id": "ABC123456789",
-      "punch_type": "1",  // 1=Check In, 2=Check Out, 3-6=Other punch types
-      "punch_date": "2024-12-02",
-      "punch_time": "2024-12-02 10:14:19"
-    }
-  ]
-}
-```
-
-Punch Type Values:
-- "1": Check In
-- "2": Check Out
-- "3": Punch Type 3
-- "4": Punch Type 4
-- "5": Punch Type 5
-- "6": Punch Type 6
-
-### 4. Get User Information and Attendance
-```
-GET /user/<user_id>
-```
-Returns information about a specific user and their attendance records.
-
-Response:
-```json
-{
-  "status": "success",
-  "data": {
-    "user_info": {
-      "uid": "1",
-      "name": "John Doe",
-      "privilege": "User",
-      "password": "1234",
-      "card": "0"
-    },
-    "attendance": {
-      "2024-12-02": {
-        "records": [
-          {
-            "time": "10:14:19",
-            "punch_type": "1"
-          }
-        ]
-      }
-    },
-    "total_attendance_records": 1
-  }
-}
-```
-
-### 5. Add Users to Device
-```
-POST /add-users
-```
-Adds new users to the device from a URL that returns a JSON array of users.
-
-Request Body:
-```json
-{
-  "url": "https://your-api-url/users"
-}
-```
-
-The URL should return a JSON array of users in the following format:
-```json
-[
-  {
-    "emp_id": "123",
-    "name": "John Doe"
+  "device_info": {
+    "ip": "192.168.1.100",
+    "port": 4370,
+    "export_time": "2025-02-25 17:49:13"
   },
-  {
-    "emp_id": "456",
-    "name": "Jane Smith"
-  }
-]
-```
-
-Response:
-```json
-{
-  "status": "success",
-  "data": {
-    "added_users": 5,
-    "failed_users": [
-      {
-        "emp_id": "123",
-        "name": "John Doe",
-        "error": "Error message"
-      }
-    ]
-  }
-}
-```
-
-### 5. Add Multiple Users
-```
-POST /users
-```
-Add multiple users to the device. Request body should contain an array of user objects.
-
-Request Body:
-```json
-{
-  "users": [
+  "records": [
     {
-      "emp_no": "123",
-      "name": "John Doe",
-      "privilege": "User",
-      "password": "1234"
+      "employee_id": "123",
+      "employee_name": "John Doe",
+      "timestamp": "2025-02-25 09:00:00",
+      "date": "2025-02-25",
+      "time": "09:00:00",
+      "punch_type": "Check In"
     }
   ]
-}
-```
-
-### 6. Add Single User
-```
-POST /user
-```
-Add a single user to the device.
-
-Request Body:
-```json
-{
-  "emp_no": "123",
-  "name": "John Doe",
-  "privilege": "User",
-  "password": "1234"
-}
-```
-
-### 7. Delete User
-```
-DELETE /user/<emp_no>
-```
-Delete a user from the device by their employee number.
-
-Response:
-```json
-{
-  "status": "success",
-  "message": "User deleted successfully"
 }
 ```
 
 ## Error Handling
 
-All endpoints return error responses in the following format:
+All API endpoints return JSON responses with the following structure:
+
 ```json
 {
-  "status": "error",
-  "message": "Error description"
+  "status": "success|error",
+  "message": "Description of the result",
+  "data": {}  // Optional data object
 }
 ```
 
-Common error scenarios:
-- Device connection failure
-- Invalid user ID
-- Invalid date format
-- User not found
+Common HTTP status codes:
+- 200: Success
+- 400: Bad Request
+- 401: Unauthorized (Device not connected)
+- 500: Server Error
 
-## Notes
-- The device connection settings (IP_ADDRESS, PORT, TIMEOUT) must be configured correctly in the api.py file
-- User privilege levels: "User", "Admin", "Supervisor"
-- All timestamps are returned in the local device timezone
-- The API uses Flask and requires Python 3.6 or higher
+## Security Notes
 
-## License
-This project is licensed under the MIT License.
+1. Device connection information is stored in server-side session
+2. SSL verification is disabled for export endpoints
+3. No authentication is required for the web interface
+4. API tokens are not required for data export
+
+## Troubleshooting
+
+1. Device Connection Issues:
+   - Verify IP address and port
+   - Check network connectivity
+   - Ensure device is powered on
+
+2. Export Issues:
+   - Verify export URL is correct
+   - Check endpoint availability
+   - Review response messages
+
+3. Data Issues:
+   - Clear data and reconnect device
+   - Reset settings if configuration is corrupted
+   - Check device time synchronization

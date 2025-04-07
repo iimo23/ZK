@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Connect Device - ZK Device Manager{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title text-center mb-4">Connect to ZK Device</h5>
+                <form id="connectForm">
+                    <div class="mb-3">
+                        <label class="form-label">Device IP Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-hdd-network"></i>
+                            </span>
+                            <input type="text" class="form-control" name="device_ip" 
+                                   placeholder="e.g. 192.168.1.201" 
+                                   value="{{ session.get('device_ip', '') }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Port</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-ethernet"></i>
+                            </span>
+                            <input type="number" class="form-control" name="port" 
+                                   placeholder="Default: 4370" 
+                                   value="{{ session.get('device_port', 4370) }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Connection Timeout (seconds)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-clock"></i>
+                            </span>
+                            <input type="number" class="form-control" name="timeout" 
+                                   placeholder="Default: 5" 
+                                   value="{{ session.get('device_timeout', 5) }}">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plug"></i> Connect
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-info-circle"></i> Connection Help
+                </h6>
+                <ul class="mb-0">
+                    <li>Make sure the device is powered on and connected to the network</li>
+                    <li>The device IP should be in the same network as this computer</li>
+                    <li>Default port is 4370 for most ZK devices</li>
+                    <li>If connection fails, try increasing the timeout value</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('connectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Rename ip to device_ip if needed (for backward compatibility)
+        if (data.ip && !data.device_ip) {
+            data.device_ip = data.ip;
+            delete data.ip;
+        }
+        
+        // Disable form while connecting
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Connecting...
+        `;
+        
+        try {
+            console.log('Sending connection request with data:', data);
+            const response = await fetch('/api/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            console.log('Response status:', response.status);
+            const result = await response.json();
+            console.log('Response data:', result);
+            
+            if (!response.ok) {
+                throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            }
+            
+            if (result.message && result.message.includes('Successfully connected')) {
+                showNotification('Connected to device successfully');
+                window.location.href = '/';
+            } else {
+                throw new Error(result.message || 'Unknown error occurred');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to connect to device: ' + error.message, 'danger');
+        } finally {
+            // Re-enable form
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-plug"></i> Connect';
+        }
+    });
+</script>
+{% endblock %}

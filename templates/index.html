@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - ZK Device Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Quick Stats -->
+    <div class="col-md-4 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-people"></i> Total Users
+                </h6>
+                <h2 class="card-title mb-0" id="totalUsers">...</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-clock"></i> Today's Attendance
+                </h6>
+                <h2 class="card-title mb-0" id="todayAttendance">...</h2>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card stats-card">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">
+                    <i class="bi bi-person-check"></i> Present Today
+                </h6>
+                <h2 class="card-title mb-0" id="presentToday">...</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Connection -->
+    {% if not session.get('device_ip') %}
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <h5 class="mb-3">Connect to ZK Device</h5>
+                    <p class="text-muted mb-4">
+                        You need to connect to a ZK device to start managing users and attendance.
+                    </p>
+                    <form id="connectForm" class="row justify-content-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-hdd-network"></i>
+                                </span>
+                                <input type="text" class="form-control" name="ip" 
+                                       placeholder="Device IP" value="{{ session.get('device_ip', '') }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-ethernet"></i>
+                                </span>
+                                <input type="number" class="form-control" name="port" 
+                                       placeholder="Port" value="{{ session.get('device_port', 4370) }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plug"></i> Connect
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Activity -->
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                    <button class="btn btn-primary btn-sm" onclick="loadRecentActivity()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivity">
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                document.getElementById('totalUsers').textContent = data.data.total_users;
+                document.getElementById('todayAttendance').textContent = data.data.today_attendance;
+                document.getElementById('presentToday').textContent = data.data.present_today;
+            } else {
+                throw new Error(data.message || 'Unknown error occurred');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('totalUsers').textContent = 'N/A';
+            document.getElementById('todayAttendance').textContent = 'N/A';
+            document.getElementById('presentToday').textContent = 'N/A';
+        }
+    }
+
+    async function loadRecentActivity() {
+        const tableBody = document.getElementById('recentActivity');
+        try {
+            const response = await fetch('/api/attendance?limit=10');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                const records = data.data;
+                
+                if (!records || records.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center">No recent activity</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tableBody.innerHTML = records.map(record => `
+                    <tr>
+                        <td>${record.timestamp}</td>
+                        <td>${record.user_id}</td>
+                        <td>
+                            <span class="badge bg-${record.punch === 'Check In' ? 'success' : 'primary'}">
+                                ${record.punch}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-${record.status ? 'success' : 'secondary'}">
+                                ${record.status || 'N/A'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                throw new Error(data.message || 'Unknown error occurred');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger">
+                        <i class="bi bi-exclamation-triangle"></i> Error loading activity
+                        <button class="btn btn-sm btn-primary ms-3" onclick="loadRecentActivity()">
+                            <i class="bi bi-arrow-clockwise"></i> Retry
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    // Handle device connection
+    document.getElementById('connectForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        
+        try {
+            const response = await fetch('/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const result = await response.json();
+            if (result.status === 'success') {
+                showNotification('Connected to device successfully');
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Unknown error occurred');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to connect to device: ' + error.message, 'danger');
+        }
+    });
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStats();
+        loadRecentActivity();
+    });
+</script>
+{% endblock %}
