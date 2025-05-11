@@ -1,0 +1,467 @@
+2025-05-08 14:46:44,893 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:46:44,894 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:46:44,894 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:46:45,597 - zk-app - INFO - Getting attendance records: start_date=None, end_date=None, emp_no=None
+2025-05-08 14:46:49,256 - zk-app - ERROR - Error connecting to device: can't reach device (ping 192.168.37.13)
+2025-05-08 14:46:49,256 - zk-app - ERROR - Error connecting to device: can't reach device (ping 192.168.37.13)
+2025-05-08 14:46:49,258 - zk-app - ERROR - Error fetching attendance: Failed to connect to device: can't reach device (ping 192.168.37.13)
+2025-05-08 14:47:19,462 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:19,462 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:19,464 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:47:19,767 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:19,767 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:19,769 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:47:39,885 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:39,885 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:39,885 - zk-app - INFO - Loaded 0 devices from legacy file
+2025-05-08 14:47:39,964 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:39,965 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:39,965 - zk-app - INFO - Loaded 0 devices from legacy file
+2025-05-08 14:47:50,901 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:50,901 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:50,901 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:47:52,443 - zk-app - INFO - Getting attendance records: start_date=2025-05-07, end_date=2025-05-08, emp_no=None
+2025-05-08 14:47:52,946 - zk-app - INFO - Retrieved 136 attendance records
+2025-05-08 14:47:52,964 - zk-app - INFO - Device disconnected
+2025-05-08 14:47:55,253 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:47:55,253 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:47:55,253 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:47:55,254 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-08 14:47:55,254 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:47:55,254 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:47:55,254 - zk-app - INFO - Date range: 2025-05-07 to 2025-05-08
+2025-05-08 14:47:55,254 - zk-app - INFO - Fetching attendance records from 2025-05-07 to 2025-05-08
+2025-05-08 14:47:55,763 - zk-app - INFO - Retrieved 136 total attendance records
+2025-05-08 14:47:55,764 - zk-app - INFO - Filtered to 3 records within date range 2025-05-07 to 2025-05-08
+2025-05-08 14:47:55,764 - zk-app - INFO - Sample record format: {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}
+2025-05-08 14:47:55,764 - zk-app - INFO - Sending 3 records to API with specified format
+2025-05-08 14:47:55,764 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}, {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-08 14:47:55,765 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:47:55,765 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-08 14:47:56,012 - zk-app - INFO - API response status: 200
+2025-05-08 14:47:56,012 - zk-app - INFO - API response content: 
+2025-05-08 14:47:56,012 - zk-app - INFO - Response is not JSON: 
+2025-05-08 14:47:56,028 - zk-app - INFO - Device disconnected
+2025-05-08 14:48:02,933 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:02,934 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:02,934 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:02,934 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-08 14:48:02,934 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:48:02,934 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:48:02,934 - zk-app - INFO - Date range: 2025-05-07 to 2025-05-08
+2025-05-08 14:48:02,934 - zk-app - INFO - Fetching attendance records from 2025-05-07 to 2025-05-08
+2025-05-08 14:48:03,470 - zk-app - INFO - Retrieved 136 total attendance records
+2025-05-08 14:48:03,471 - zk-app - INFO - Filtered to 3 records within date range 2025-05-07 to 2025-05-08
+2025-05-08 14:48:03,471 - zk-app - INFO - Sample record format: {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}
+2025-05-08 14:48:03,471 - zk-app - INFO - Sending 3 records to API with specified format
+2025-05-08 14:48:03,471 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}, {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-08 14:48:03,471 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:48:03,471 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-08 14:48:03,615 - zk-app - INFO - API response status: 200
+2025-05-08 14:48:03,615 - zk-app - INFO - API response content: 
+2025-05-08 14:48:03,615 - zk-app - INFO - Response is not JSON: 
+2025-05-08 14:48:03,635 - zk-app - INFO - Device disconnected
+2025-05-08 14:48:45,425 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:45,425 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:45,425 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:45,735 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:45,735 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:45,735 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:53,603 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123', 'api_key': '', 'auto_sync': True}
+2025-05-08 14:48:53,604 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:53,604 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:53,604 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:53,604 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123', 'device': {'ip': '192.168.37.13', 'port': 4370, 'timeout': 5}, 'registered_devices': {'12351': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-08T14:48:46.473430'}}, 'active_device': '12351', 'first_run': False, 'api_key': '', 'auto_sync': True}
+2025-05-08 14:48:53,605 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:53,607 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:53,912 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123', 'api_key': '', 'auto_sync': True}
+2025-05-08 14:48:53,913 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:53,913 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:53,913 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:53,913 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123', 'device': {'ip': '192.168.37.13', 'port': 4370, 'timeout': 5}, 'registered_devices': {'12351': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-08T14:48:46.473430'}}, 'active_device': '12351', 'first_run': False, 'api_key': '', 'auto_sync': True}
+2025-05-08 14:48:53,914 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:53,919 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:57,700 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:48:57,700 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:48:57,701 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:48:59,146 - zk-app - INFO - Getting attendance records: start_date=2025-05-07, end_date=2025-05-08, emp_no=None
+2025-05-08 14:48:59,991 - zk-app - INFO - Retrieved 136 attendance records
+2025-05-08 14:49:00,009 - zk-app - INFO - Device disconnected
+2025-05-08 14:49:00,634 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:49:00,635 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:49:00,635 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:49:00,635 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-08 14:49:00,636 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123
+2025-05-08 14:49:00,636 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123
+2025-05-08 14:49:00,636 - zk-app - INFO - Date range: 2025-05-07 to 2025-05-08
+2025-05-08 14:49:00,636 - zk-app - INFO - Fetching attendance records from 2025-05-07 to 2025-05-08
+2025-05-08 14:49:01,211 - zk-app - INFO - Retrieved 136 total attendance records
+2025-05-08 14:49:01,213 - zk-app - INFO - Filtered to 3 records within date range 2025-05-07 to 2025-05-08
+2025-05-08 14:49:01,213 - zk-app - INFO - Sample record format: {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}
+2025-05-08 14:49:01,213 - zk-app - INFO - Sending 3 records to API with specified format
+2025-05-08 14:49:01,214 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}, {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-08 14:49:01,214 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=123
+2025-05-08 14:49:01,214 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-08 14:49:01,738 - zk-app - INFO - API response status: 500
+2025-05-08 14:49:01,754 - zk-app - WARNING - Batch request failed with status 500, trying individual records
+2025-05-08 14:49:01,755 - zk-app - INFO - Sending record 1/3: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}]}
+2025-05-08 14:49:01,911 - zk-app - INFO - Record 1 - API response status: 500
+2025-05-08 14:49:01,915 - zk-app - INFO - Record 1 - API response content: {
+    "code": "InternalServerError",
+    "title": "Internal Server Error",
+    "message": "An unexpected error with the following message occurred: Can't find resource for bundle java.util.PropertyRes
+2025-05-08 14:49:01,915 - zk-app - WARNING - Failed to send record for emp_no 10: 500
+2025-05-08 14:49:02,416 - zk-app - INFO - Sending record 2/3: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:54:01"}]}
+2025-05-08 14:49:02,601 - zk-app - INFO - Record 2 - API response status: 500
+2025-05-08 14:49:02,607 - zk-app - INFO - Record 2 - API response content: {
+    "code": "InternalServerError",
+    "title": "Internal Server Error",
+    "message": "An unexpected error with the following message occurred: Can't find resource for bundle java.util.PropertyRes
+2025-05-08 14:49:02,607 - zk-app - WARNING - Failed to send record for emp_no 10: 500
+2025-05-08 14:49:03,108 - zk-app - INFO - Sending record 3/3: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 13:30:03"}]}
+2025-05-08 14:49:03,291 - zk-app - INFO - Record 3 - API response status: 500
+2025-05-08 14:49:03,297 - zk-app - INFO - Record 3 - API response content: {
+    "code": "InternalServerError",
+    "title": "Internal Server Error",
+    "message": "An unexpected error with the following message occurred: Can't find resource for bundle java.util.PropertyRes
+2025-05-08 14:49:03,297 - zk-app - WARNING - Failed to send record for emp_no 10: 500
+2025-05-08 14:49:03,809 - zk-app - INFO - Device disconnected
+2025-05-08 14:49:07,817 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:49:07,817 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:49:07,817 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:49:08,121 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:49:08,121 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:49:08,122 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:52:49,027 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'api_key': '', 'auto_sync': True}
+2025-05-08 14:52:49,030 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'api_key': '', 'auto_sync': True}
+2025-05-08 14:52:49,032 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,032 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:52:49,032 - zk-app - INFO - Loading config from: C:\Users\MO\Desktop\zk_final\dist\config.json
+2025-05-08 14:52:49,032 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\Desktop\zk_final\dist\devices.json
+2025-05-08 14:52:49,032 - zk-app - INFO - Config file not found. Creating with default values
+2025-05-08 14:52:49,033 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:52:49,033 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,033 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'device': {'ip': '192.168.37.13', 'port': 4370, 'timeout': 5}, 'registered_devices': {'12351': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-08T14:49:08.581142'}}, 'active_device': '12351', 'first_run': False, 'api_key': '', 'auto_sync': True}
+2025-05-08 14:52:49,035 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,037 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,037 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'registered_devices': {}, 'first_run': True, 'api_key': '', 'auto_sync': True}
+2025-05-08 14:52:49,038 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,038 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:49,054 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:50,908 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:52:50,908 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:52:50,908 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:52:52,726 - zk-app - INFO - Getting attendance records: start_date=2025-05-07, end_date=2025-05-08, emp_no=None
+2025-05-08 14:52:54,753 - zk-app - ERROR - Error connecting to device: can't reach device (ping 192.168.37.13)
+2025-05-08 14:52:58,788 - zk-app - ERROR - Error connecting to device: timed out
+2025-05-08 14:52:58,788 - zk-app - ERROR - Error fetching attendance: Failed to connect to device: timed out
+2025-05-08 14:55:06,101 - zk-app - INFO - Getting attendance records: start_date=2025-05-07, end_date=2025-05-08, emp_no=None
+2025-05-08 14:55:07,237 - zk-app - INFO - Retrieved 136 attendance records
+2025-05-08 14:55:07,253 - zk-app - INFO - Device disconnected
+2025-05-08 14:55:08,287 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:55:08,288 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:55:08,288 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:55:08,288 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-08 14:55:08,288 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:08,288 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:08,288 - zk-app - INFO - Date range: 2025-05-07 to 2025-05-08
+2025-05-08 14:55:08,288 - zk-app - INFO - Fetching attendance records from 2025-05-07 to 2025-05-08
+2025-05-08 14:55:08,742 - zk-app - INFO - Retrieved 136 total attendance records
+2025-05-08 14:55:08,743 - zk-app - INFO - Filtered to 3 records within date range 2025-05-07 to 2025-05-08
+2025-05-08 14:55:08,743 - zk-app - INFO - Sample record format: {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}
+2025-05-08 14:55:08,743 - zk-app - INFO - Sending 3 records to API with specified format
+2025-05-08 14:55:08,743 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}, {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-08 14:55:08,743 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:08,743 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-08 14:55:08,967 - zk-app - INFO - API response status: 200
+2025-05-08 14:55:08,967 - zk-app - INFO - API response content: 
+2025-05-08 14:55:08,967 - zk-app - INFO - Response is not JSON: 
+2025-05-08 14:55:08,976 - zk-app - INFO - Device disconnected
+2025-05-08 14:55:17,783 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-08 14:55:17,783 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-08 14:55:17,785 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-08 14:55:17,785 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-08 14:55:17,785 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:17,785 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:17,785 - zk-app - INFO - Date range: 2025-05-07 to 2025-05-08
+2025-05-08 14:55:17,785 - zk-app - INFO - Fetching attendance records from 2025-05-07 to 2025-05-08
+2025-05-08 14:55:18,355 - zk-app - INFO - Retrieved 136 total attendance records
+2025-05-08 14:55:18,355 - zk-app - INFO - Filtered to 3 records within date range 2025-05-07 to 2025-05-08
+2025-05-08 14:55:18,355 - zk-app - INFO - Sample record format: {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}
+2025-05-08 14:55:18,355 - zk-app - INFO - Sending 3 records to API with specified format
+2025-05-08 14:55:18,355 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-08", "punch_time": "2025-05-08 12:53:59"}, {"emp_no": 10, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-08 14:55:18,355 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-08 14:55:18,355 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-08 14:55:18,502 - zk-app - INFO - API response status: 200
+2025-05-08 14:55:18,503 - zk-app - INFO - API response content: 
+2025-05-08 14:55:18,503 - zk-app - INFO - Response is not JSON: 
+2025-05-08 14:55:18,519 - zk-app - INFO - Device disconnected
+2025-05-11 10:39:38,606 - zk-app - INFO - Getting attendance records: start_date=None, end_date=None, emp_no=None
+2025-05-11 10:39:39,066 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 10:39:39,086 - zk-app - INFO - Device disconnected
+2025-05-11 10:39:46,206 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:39:46,206 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:39:46,207 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:39:46,511 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:39:46,511 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:39:46,513 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:39:56,629 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:39:56,629 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:39:56,630 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:39:56,630 - zk-app - INFO - Retrieved last_send_info: None
+2025-05-11 10:39:56,630 - zk-app - WARNING - last_send_info is None, adding test data for debugging
+2025-05-11 10:39:56,630 - zk-app - INFO - Rendering api_send.html with last_send_info: True
+2025-05-11 10:39:57,307 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:39:57,308 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:39:57,308 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:40:27,201 - zk-app - INFO - Getting attendance records: start_date=2025-05-09, end_date=2025-05-11, emp_no=None
+2025-05-11 10:40:27,633 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 10:40:27,652 - zk-app - INFO - Device disconnected
+2025-05-11 10:40:32,031 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:32,031 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:40:32,031 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:40:33,796 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:33,796 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:40:33,797 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:40:33,799 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:33,804 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:33,804 - zk-app - INFO - Updated last_successful_send in config.json: 2025-05-11T07:40:33.487Z
+2025-05-11 10:40:42,878 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:42,878 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:40:42,878 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:40:42,939 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:40:42,939 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:40:42,939 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:41:10,550 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:10,550 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:41:10,550 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:41:10,550 - zk-app - INFO - Retrieved last_send_info: {'last_send_time': '2025-05-11T07:40:33.487Z', 'last_send_data': {'count': 1, 'summary': 'Sent 1 records', 'records_preview': [{'punch': '2', 'punch_type': 1, 'status': 1, 'timestamp': '2025-05-10 17:39:26', 'user_id': '33'}]}}
+2025-05-11 10:41:10,550 - zk-app - INFO - Rendering api_send.html with last_send_info: True
+2025-05-11 10:41:11,233 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:11,233 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:41:11,233 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:41:41,678 - zk-app - INFO - Getting attendance records: start_date=2025-05-10, end_date=2025-05-11, emp_no=None
+2025-05-11 10:41:42,114 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 10:41:42,135 - zk-app - INFO - Device disconnected
+2025-05-11 10:41:45,084 - zk-app - INFO - Getting attendance records: start_date=2025-05-09, end_date=2025-05-11, emp_no=None
+2025-05-11 10:41:45,427 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 10:41:45,441 - zk-app - INFO - Device disconnected
+2025-05-11 10:41:49,681 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:49,681 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:41:49,681 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:41:50,613 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:50,613 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:41:50,614 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:41:50,615 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:50,618 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:41:50,618 - zk-app - INFO - Updated last_successful_send in config.json: 2025-05-11T07:41:50.295Z
+2025-05-11 10:43:37,232 - zk-app - INFO - Getting attendance records: start_date=None, end_date=None, emp_no=None
+2025-05-11 10:43:38,001 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 10:43:38,020 - zk-app - INFO - Device disconnected
+2025-05-11 10:43:41,594 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:43:41,594 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:43:41,594 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:43:41,596 - zk-app - INFO - Retrieved last_send_info: {'last_send_time': '2025-05-11T07:41:50.295Z', 'last_send_data': {'count': 1, 'summary': 'Sent 1 records', 'records_preview': [{'punch': '2', 'punch_type': 1, 'status': 1, 'timestamp': '2025-05-10 17:39:26', 'user_id': '33'}]}}
+2025-05-11 10:43:41,596 - zk-app - INFO - Rendering api_send.html with last_send_info: True
+2025-05-11 10:43:42,263 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:43:42,264 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:43:42,264 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:43:45,156 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:43:45,157 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:43:45,157 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 10:43:45,464 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 10:43:45,464 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 10:43:45,465 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:48:50,788 - zk-app - INFO - Getting attendance records: start_date=None, end_date=None, emp_no=None
+2025-05-11 11:48:53,958 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:48:53,958 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:48:53,959 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:48:53,959 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:48:53,959 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:48:53,959 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:48:54,753 - zk-app - ERROR - Error connecting to device: can't reach device (ping 192.168.37.13)
+2025-05-11 11:48:57,345 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:48:57,346 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:48:57,346 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:48:57,347 - zk-app - INFO - Retrieved last_send_info: {'last_send_time': '2025-05-11T07:41:50.295Z', 'last_send_data': {'count': 1, 'summary': 'Sent 1 records', 'records_preview': [{'punch': '2', 'punch_type': 1, 'status': 1, 'timestamp': '2025-05-10 17:39:26', 'user_id': '33'}]}}
+2025-05-11 11:48:57,347 - zk-app - INFO - Rendering api_send.html with last_send_info: True
+2025-05-11 11:48:58,032 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:48:58,033 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:48:58,033 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:48:58,782 - zk-app - ERROR - Error connecting to device: timed out
+2025-05-11 11:48:58,782 - zk-app - ERROR - Error fetching attendance: Failed to connect to device: timed out
+2025-05-11 11:49:02,286 - device_manager - ERROR - Connection test failed for device 12351: timed out
+2025-05-11 11:49:03,191 - zk-app - INFO - Getting attendance records: start_date=2025-05-09, end_date=2025-05-11, emp_no=None
+2025-05-11 11:49:10,779 - zk-app - ERROR - Error connecting to device: timed out
+2025-05-11 11:49:10,779 - zk-app - ERROR - Error fetching attendance: Failed to connect to device: timed out
+2025-05-11 11:50:16,216 - zk-app - INFO - Getting attendance records: start_date=2025-05-09, end_date=2025-05-11, emp_no=None
+2025-05-11 11:50:16,695 - zk-app - INFO - Retrieved 137 attendance records
+2025-05-11 11:50:16,711 - zk-app - INFO - Device disconnected
+2025-05-11 11:50:18,136 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:50:18,136 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:50:18,137 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:50:18,955 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:50:18,956 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:50:18,957 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 11:50:18,959 - zk-app - INFO - Saving config to: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:50:18,963 - zk-app - INFO - Config saved successfully to C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:50:18,963 - zk-app - INFO - Updated last_successful_send in config.json: 2025-05-11T08:50:18.649Z
+2025-05-11 11:52:33,331 - zk-app - INFO - Loading config from: C:\Users\MO\ZK_Attendance_System\config.json
+2025-05-11 11:52:33,331 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\ZK_Attendance_System\devices.json
+2025-05-11 11:52:33,331 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:36:45,140 - device_manager - WARNING - Config file not found at C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json, trying legacy devices.json
+2025-05-11 13:36:57,122 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:36:57,123 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:36:57,123 - zk-app - INFO - Config file not found. Creating with default values
+2025-05-11 13:36:57,123 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:36:57,125 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:36:57,425 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:36:57,425 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:33,247 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:37:33,247 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:33,247 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:33,247 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:33,247 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f', 'registered_devices': {'1222': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-11T13:37:08.642990'}}, 'first_run': True, 'active_device': '1222', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:37:33,247 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:33,250 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:33,561 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:37:33,561 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:33,561 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:33,562 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:33,562 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f', 'registered_devices': {'1222': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-11T13:37:08.642990'}}, 'first_run': True, 'active_device': '1222', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:37:33,562 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:33,567 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:36,846 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:36,846 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:36,847 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:37,518 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:37,520 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:37,520 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:41,395 - zk-app - INFO - Getting attendance records: start_date=2025-05-09, end_date=2025-05-11, emp_no=None
+2025-05-11 13:37:41,764 - zk-app - INFO - Retrieved 138 attendance records
+2025-05-11 13:37:41,787 - zk-app - INFO - Device disconnected
+2025-05-11 13:37:43,002 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:43,002 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:43,002 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:43,002 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-11 13:37:43,002 - zk-app - INFO - Using attendance API URL from config: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:43,002 - zk-app - INFO - Sending attendance to API: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:43,003 - zk-app - INFO - Date range: 2025-05-09 to 2025-05-11
+2025-05-11 13:37:43,003 - zk-app - INFO - Fetching attendance records from 2025-05-09 to 2025-05-11
+2025-05-11 13:37:43,412 - zk-app - INFO - Retrieved 138 total attendance records
+2025-05-11 13:37:43,413 - zk-app - INFO - Filtered to 2 records within date range 2025-05-09 to 2025-05-11
+2025-05-11 13:37:43,414 - zk-app - INFO - Sample record format: {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}
+2025-05-11 13:37:43,414 - zk-app - INFO - Sending 2 records to API with specified format
+2025-05-11 13:37:43,414 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}, {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-11 13:37:43,414 - zk-app - INFO - Sending POST request to: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:43,414 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-11 13:37:44,288 - zk-app - INFO - API response status: 200
+2025-05-11 13:37:44,288 - zk-app - INFO - API response content: 
+2025-05-11 13:37:44,290 - zk-app - INFO - Response is not JSON: 
+2025-05-11 13:37:44,290 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:44,291 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:44,291 - zk-app - INFO - last_successful_send updated in config.json after batch send
+2025-05-11 13:37:44,324 - zk-app - INFO - Device disconnected
+2025-05-11 13:37:47,624 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:47,624 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:47,625 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:48,263 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:48,263 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:48,264 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:57,107 - zk-app - INFO - Getting attendance records: start_date=2025-05-10, end_date=2025-05-11, emp_no=None
+2025-05-11 13:37:57,484 - zk-app - INFO - Retrieved 138 attendance records
+2025-05-11 13:37:57,491 - zk-app - INFO - Device disconnected
+2025-05-11 13:37:58,294 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:58,294 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:37:58,295 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:37:58,295 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-11 13:37:58,295 - zk-app - INFO - Using attendance API URL from config: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:58,295 - zk-app - INFO - Sending attendance to API: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:58,295 - zk-app - INFO - Date range: 2025-05-10 to 2025-05-11
+2025-05-11 13:37:58,295 - zk-app - INFO - Fetching attendance records from 2025-05-10 to 2025-05-11
+2025-05-11 13:37:58,664 - zk-app - INFO - Retrieved 138 total attendance records
+2025-05-11 13:37:58,665 - zk-app - INFO - Filtered to 2 records within date range 2025-05-10 to 2025-05-11
+2025-05-11 13:37:58,665 - zk-app - INFO - Sample record format: {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}
+2025-05-11 13:37:58,665 - zk-app - INFO - Sending 2 records to API with specified format
+2025-05-11 13:37:58,665 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}, {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-11 13:37:58,665 - zk-app - INFO - Sending POST request to: https://g99807e0247516f-horizonstek.adb.me-jeddah-1.oraclecloudapps.com/ords/sas_api/zkteco/attendance?api_token=5614c0333eef5265b6e2327ac530f1634c52822fa3c8d6e0aca68016d4157a7f
+2025-05-11 13:37:58,666 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-11 13:37:58,835 - zk-app - INFO - API response status: 200
+2025-05-11 13:37:58,835 - zk-app - INFO - API response content: 
+2025-05-11 13:37:58,835 - zk-app - INFO - Response is not JSON: 
+2025-05-11 13:37:58,835 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:58,839 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:37:58,839 - zk-app - INFO - last_successful_send updated in config.json after batch send
+2025-05-11 13:37:58,853 - zk-app - INFO - Device disconnected
+2025-05-11 13:38:20,687 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:20,688 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:20,688 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:20,994 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:20,994 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:20,995 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:33,043 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:38:33,043 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:33,043 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:33,043 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:33,043 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'registered_devices': {'1222': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-11T13:38:21.793402'}}, 'first_run': True, 'active_device': '1222', 'api_key': '', 'auto_sync': True, 'last_successful_send': {'last_send_time': '2025-05-11 13:37:58', 'last_send_data': {'count': 2, 'summary': 'Sent 2 records', 'records_preview': [{'emp_no': 33, 'device_id': '111', 'punch_type': '2', 'punch_date': '2025-05-10', 'punch_time': '2025-05-10 17:39:26'}, {'emp_no': 33, 'device_id': '111', 'punch_type': '2', 'punch_date': '2025-05-11', 'punch_time': '2025-05-11 11:51:16'}]}}}
+2025-05-11 13:38:33,043 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:33,045 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:33,355 - zk-app - INFO - Received API config data: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'api_key': '', 'auto_sync': True}
+2025-05-11 13:38:33,355 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:33,355 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:33,357 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:33,358 - zk-app - INFO - Updated config before saving: {'attendance_api_url': 'https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2', 'registered_devices': {'1222': {'name': 'ss', 'ip': '192.168.37.13', 'port': 4370, 'timeout': 5, 'last_connected': '2025-05-11T13:38:21.793402'}}, 'first_run': True, 'active_device': '1222', 'api_key': '', 'auto_sync': True, 'last_successful_send': {'last_send_time': '2025-05-11 13:37:58', 'last_send_data': {'count': 2, 'summary': 'Sent 2 records', 'records_preview': [{'emp_no': 33, 'device_id': '111', 'punch_type': '2', 'punch_date': '2025-05-10', 'punch_time': '2025-05-10 17:39:26'}, {'emp_no': 33, 'device_id': '111', 'punch_type': '2', 'punch_date': '2025-05-11', 'punch_time': '2025-05-11 11:51:16'}]}}}
+2025-05-11 13:38:33,358 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:33,363 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:36,972 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:36,974 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:36,974 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:37,326 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:37,326 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:37,326 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:39,305 - zk-app - INFO - Getting attendance records: start_date=2025-05-10, end_date=2025-05-11, emp_no=None
+2025-05-11 13:38:39,649 - zk-app - INFO - Retrieved 138 attendance records
+2025-05-11 13:38:39,661 - zk-app - INFO - Device disconnected
+2025-05-11 13:38:41,110 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:41,110 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:38:41,110 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:38:41,110 - zk-app - INFO - Retrieved config from get_config() function
+2025-05-11 13:38:41,110 - zk-app - INFO - Using attendance API URL from config: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-11 13:38:41,110 - zk-app - INFO - Sending attendance to API: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-11 13:38:41,110 - zk-app - INFO - Date range: 2025-05-10 to 2025-05-11
+2025-05-11 13:38:41,110 - zk-app - INFO - Fetching attendance records from 2025-05-10 to 2025-05-11
+2025-05-11 13:38:41,461 - zk-app - INFO - Retrieved 138 total attendance records
+2025-05-11 13:38:41,463 - zk-app - INFO - Filtered to 2 records within date range 2025-05-10 to 2025-05-11
+2025-05-11 13:38:41,463 - zk-app - INFO - Sample record format: {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}
+2025-05-11 13:38:41,463 - zk-app - INFO - Sending 2 records to API with specified format
+2025-05-11 13:38:41,463 - zk-app - INFO - Payload structure: {"data": [{"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2025-05-10", "punch_time": "2025-05-10 17:39:26"}, {"emp_no": 33, "device_id": "111", "punch_type": "2", "punch_date": "2...
+2025-05-11 13:38:41,463 - zk-app - INFO - Sending POST request to: https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2
+2025-05-11 13:38:41,463 - zk-app - INFO - Headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+2025-05-11 13:38:41,630 - zk-app - INFO - API response status: 200
+2025-05-11 13:38:41,631 - zk-app - INFO - API response content: 
+2025-05-11 13:38:41,631 - zk-app - INFO - Response is not JSON: 
+2025-05-11 13:38:41,631 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:41,634 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:38:41,634 - zk-app - INFO - last_successful_send updated in config.json after batch send
+2025-05-11 13:38:41,653 - zk-app - INFO - Device disconnected
+2025-05-11 13:39:04,990 - zk-app - INFO - Connected to device, fetching users...
+2025-05-11 13:39:05,082 - zk-app - INFO - Found 7 users
+2025-05-11 13:39:05,083 - zk-app - INFO - Successfully processed 7 users
+2025-05-11 13:39:05,098 - zk-app - INFO - Device disconnected
+2025-05-11 13:39:10,115 - zk-app - INFO - Getting attendance records: start_date=None, end_date=None, emp_no=None
+2025-05-11 13:39:11,330 - zk-app - INFO - Retrieved 138 attendance records
+2025-05-11 13:39:11,349 - zk-app - INFO - Device disconnected
+2025-05-11 13:39:23,825 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:39:23,825 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:39:23,825 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:39:24,127 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI171922\config.json
+2025-05-11 13:39:24,127 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI171922\devices.json
+2025-05-11 13:39:24,129 - zk-app - INFO - Loaded 1 devices from legacy file
+2025-05-11 13:39:36,744 - device_manager - WARNING - Config file not found at C:\Users\MO\AppData\Local\Temp\_MEI233722\config.json, trying legacy devices.json
+2025-05-11 13:39:42,288 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI233722\config.json
+2025-05-11 13:39:42,288 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI233722\devices.json
+2025-05-11 13:39:42,290 - zk-app - INFO - Config file not found. Creating with default values
+2025-05-11 13:39:42,290 - zk-app - INFO - Saving config to: C:\Users\MO\AppData\Local\Temp\_MEI233722\config.json
+2025-05-11 13:39:42,293 - zk-app - INFO - Config saved successfully to C:\Users\MO\AppData\Local\Temp\_MEI233722\config.json
+2025-05-11 13:39:42,368 - zk-app - INFO - Loading config from: C:\Users\MO\AppData\Local\Temp\_MEI233722\config.json
+2025-05-11 13:39:42,368 - zk-app - INFO - Checking for legacy devices file at: C:\Users\MO\AppData\Local\Temp\_MEI233722\devices.json

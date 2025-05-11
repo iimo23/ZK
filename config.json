@@ -1,0 +1,59 @@
+{
+    "registered_devices": {
+        "2": {
+            "name": "w",
+            "ip": "192.168.37.13",
+            "port": 4370,
+            "timeout": 5,
+            "last_connected": "2025-05-11T13:35:48.294735"
+        }
+    },
+    "active_device": "2",
+    "attendance_api_url": "https://aqeeq12.dyndns.biz:9093/apex/sas_api/zkteco/attendance?api_token=beffbc4432ca4d4e8fdd19830dc1fe4608effb2e65d7f6f8d309d1d8519fcec2",
+    "api_key": "",
+    "auto_sync": true,
+    "last_successful_send": {
+        "last_send_time": "2025-05-11 13:35:27",
+        "last_send_data": {
+            "count": 5,
+            "summary": "Sent 5 records",
+            "records_preview": [
+                {
+                    "emp_no": 10,
+                    "device_id": "111",
+                    "punch_type": "2",
+                    "punch_date": "2025-05-08",
+                    "punch_time": "2025-05-08 12:53:59"
+                },
+                {
+                    "emp_no": 10,
+                    "device_id": "111",
+                    "punch_type": "2",
+                    "punch_date": "2025-05-08",
+                    "punch_time": "2025-05-08 12:54:01"
+                },
+                {
+                    "emp_no": 10,
+                    "device_id": "111",
+                    "punch_type": "2",
+                    "punch_date": "2025-05-08",
+                    "punch_time": "2025-05-08 13:30:03"
+                },
+                {
+                    "emp_no": 33,
+                    "device_id": "111",
+                    "punch_type": "2",
+                    "punch_date": "2025-05-10",
+                    "punch_time": "2025-05-10 17:39:26"
+                },
+                {
+                    "emp_no": 33,
+                    "device_id": "111",
+                    "punch_type": "2",
+                    "punch_date": "2025-05-11",
+                    "punch_time": "2025-05-11 11:51:16"
+                }
+            ]
+        }
+    }
+}

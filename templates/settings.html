@@ -1,0 +1,765 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & Device Management - ZK Attendance System{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">Settings & Device Management</h1>
+        <p class="text-muted">Configure your ZK attendance system and manage devices</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Settings Section -->
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">API Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="api-settings-form" method="post" action="/api/config-settings">
+                    <div class="mb-3">
+                        <label for="api-url" class="form-label">API URL</label>
+                        <input type="url" class="form-control" id="api-url" name="api_url" placeholder="https://example.com/api/attendance" required>
+                        <div class="form-text">The URL where attendance data will be sent.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="api-key" class="form-label">API Key (Optional)</label>
+                        <input type="text" class="form-control" id="api-key" name="api_key" placeholder="Your API key">
+                        <div class="form-text">If your API requires authentication.</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="auto-sync" name="auto_sync" checked>
+                        <label class="form-check-label" for="auto-sync">Enable automatic sync</label>
+                        <div class="form-text">Automatically sync attendance data every minute.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Save Settings
+                        </button>
+                        <button type="button" id="test-api-btn" class="btn btn-outline-primary">
+                            <i class="bi bi-lightning"></i> Test Connection
+                        </button>
+                    </div>
+                </form>
+                <div id="api-status" class="mt-3 d-none"></div>
+            </div>
+        </div>
+        
+       
+    </div>
+    
+    <!-- Device Management Section -->
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Registered Devices</h5>
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addDeviceModal">
+                    <i class="bi bi-plus-circle"></i> Add Device
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="device-list-container">
+                    <div class="text-center py-4" id="loading-devices">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading devices...</p>
+                    </div>
+                    <div id="no-devices-message" class="text-center py-4 d-none">
+                        <i class="bi bi-exclamation-circle text-muted" style="font-size: 2rem;"></i>
+                        <p class="mt-2">No devices registered. Please add a device.</p>
+                    </div>
+                    <div id="device-list" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>IP Address</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="device-table-body">
+                                    <!-- Devices will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal fade" id="addDeviceModal" tabindex="-1" aria-labelledby="addDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDeviceModalLabel">Add New Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="add-device-form">
+                    <div class="mb-3">
+                        <label for="device_name" class="form-label">Device Name</label>
+                        <input type="text" class="form-control" id="device_name" name="device_name" required>
+                        <div class="form-text">Enter a friendly name for this device</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="device_id" class="form-label">Device ID</label>
+                        <input type="text" class="form-control" id="device_id" name="device_id" required>
+                        <div class="form-text">Enter a unique identifier for this device</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="device_ip" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="device_ip" name="device_ip" required>
+                        <div class="form-text">Enter the IP address of the ZK device</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="device_port" class="form-label">Port</label>
+                            <input type="number" class="form-control" id="device_port" name="device_port" value="4370" required>
+                            <div class="form-text">Default port is 4370</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="device_timeout" class="form-label">Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="device_timeout" name="device_timeout" value="5" required>
+                            <div class="form-text">Connection timeout</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-device-btn">Add Device</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Device Modal -->
+<div class="modal fade" id="editDeviceModal" tabindex="-1" aria-labelledby="editDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editDeviceModalLabel">Edit Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-device-form">
+                    <input type="hidden" id="edit_device_id" name="edit_device_id">
+                    <div class="mb-3">
+                        <label for="edit_device_name" class="form-label">Device Name</label>
+                        <input type="text" class="form-control" id="edit_device_name" name="edit_device_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_device_ip" class="form-label">IP Address</label>
+                        <input type="text" class="form-control" id="edit_device_ip" name="edit_device_ip" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_device_port" class="form-label">Port</label>
+                            <input type="number" class="form-control" id="edit_device_port" name="edit_device_port" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_device_timeout" class="form-label">Timeout (seconds)</label>
+                            <input type="number" class="form-control" id="edit_device_timeout" name="edit_device_timeout" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="update-device-btn">Update Device</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Device Confirmation Modal -->
+<div class="modal fade" id="deleteDeviceModal" tabindex="-1" aria-labelledby="deleteDeviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteDeviceModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this device? This action cannot be undone.</p>
+                <p><strong>Device: </strong><span id="delete-device-name"></span></p>
+                <input type="hidden" id="delete_device_id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete Device</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // API Settings Elements
+        const apiSettingsForm = document.getElementById('api-settings-form');
+        const apiStatus = document.getElementById('api-status');
+        const testApiBtn = document.getElementById('test-api-btn');
+        const triggerSyncBtn = document.getElementById('trigger-sync-btn');
+        const triggerSyncResetBtn = document.getElementById('trigger-sync-reset');
+        const syncStatus = document.getElementById('sync-status');
+        
+        // Device Management Elements
+        const deviceTableBody = document.getElementById('device-table-body');
+        const loadingDevices = document.getElementById('loading-devices');
+        const noDevicesMessage = document.getElementById('no-devices-message');
+        const deviceList = document.getElementById('device-list');
+        const addDeviceForm = document.getElementById('add-device-form');
+        const saveDeviceBtn = document.getElementById('save-device-btn');
+        const editDeviceForm = document.getElementById('edit-device-form');
+        const updateDeviceBtn = document.getElementById('update-device-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        
+        // ===== API SETTINGS FUNCTIONALITY =====
+        
+        // Load current API configuration
+        try {
+            const response = await fetch('/api/config-settings');
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const config = data.config || {};
+                
+                // Set form values
+                document.getElementById('api-url').value = config.attendance_api_url || '';
+                document.getElementById('api-key').value = config.api_key || '';
+                document.getElementById('auto-sync').checked = config.auto_sync !== false; // Default to true if not specified
+            }
+        } catch (error) {
+            console.error('Error loading API configuration:', error);
+        }
+        
+        // Save API configuration
+        if (apiSettingsForm) {
+            apiSettingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Get form data
+                const apiUrl = document.getElementById('api-url').value;
+                const apiKey = document.getElementById('api-key').value;
+                const autoSync = document.getElementById('auto-sync').checked;
+                
+                const data = {
+                    attendance_api_url: apiUrl,
+                    api_key: apiKey,
+                    auto_sync: autoSync
+                };
+                
+                try {
+                    // Send configuration
+                    const response = await fetch('/api/config-settings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Show status
+                    apiStatus.innerHTML = `
+                        <div class="alert alert-${result.status === 'success' ? 'success' : 'danger'} alert-dismissible fade show">
+                            ${result.status === 'success' ? 'API settings saved successfully!' : result.message || 'Failed to save settings.'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    apiStatus.classList.remove('d-none');
+                } catch (error) {
+                    // Show error
+                    apiStatus.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            Error saving settings: ${error.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    apiStatus.classList.remove('d-none');
+                }
+            });
+        }
+        
+        // Test API connection
+        if (testApiBtn) {
+            testApiBtn.addEventListener('click', async () => {
+                // Get API URL
+                const apiUrl = document.getElementById('api-url').value;
+                
+                if (!apiUrl) {
+                    apiStatus.innerHTML = `
+                        <div class="alert alert-warning alert-dismissible fade show">
+                            Please enter an API URL first.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    apiStatus.classList.remove('d-none');
+                    return;
+                }
+                
+                // Show testing status
+                apiStatus.innerHTML = `
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Testing...</span>
+                            </div>
+                            <div>Testing connection to API...</div>
+                        </div>
+                    </div>
+                `;
+                apiStatus.classList.remove('d-none');
+                
+                try {
+                    // Test connection
+                    const response = await fetch('/api/test-connection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            api_url: apiUrl
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Show result
+                    apiStatus.innerHTML = `
+                        <div class="alert alert-${result.status === 'success' ? 'success' : 'danger'} alert-dismissible fade show">
+                            ${result.status === 'success' ? 'API connection successful!' : result.message || 'Failed to connect to API.'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                } catch (error) {
+                    // Show error
+                    apiStatus.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            Error testing API connection: ${error.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        // Trigger sync
+        if (triggerSyncBtn) {
+            triggerSyncBtn.addEventListener('click', () => triggerSync(false));
+        }
+        
+        // Trigger sync with reset
+        if (triggerSyncResetBtn) {
+            triggerSyncResetBtn.addEventListener('click', () => triggerSync(true));
+        }
+        
+        // Function to trigger sync
+        async function triggerSync(reset) {
+            // Show syncing status
+            syncStatus.innerHTML = `
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Syncing...</span>
+                        </div>
+                        <div>Syncing attendance records to API...</div>
+                    </div>
+                </div>
+            `;
+            syncStatus.classList.remove('d-none');
+            
+            try {
+                // Trigger sync
+                const response = await fetch('/api/trigger-sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reset: reset
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // Show result
+                syncStatus.innerHTML = `
+                    <div class="alert alert-${result.status === 'success' ? 'success' : 'danger'} alert-dismissible fade show">
+                        ${result.status === 'success' ? 'Sync completed successfully!' : result.message || 'Failed to sync records.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } catch (error) {
+                // Show error
+                syncStatus.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        Error syncing records: ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        }
+        
+        // ===== DEVICE MANAGEMENT FUNCTIONALITY =====
+        
+        // Load devices on page load
+        loadDevices();
+        
+        // Add device form submission
+        if (saveDeviceBtn) {
+            saveDeviceBtn.addEventListener('click', addDevice);
+        }
+        
+        // Update device form submission
+        if (updateDeviceBtn) {
+            updateDeviceBtn.addEventListener('click', updateDevice);
+        }
+        
+        // Delete device confirmation
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', deleteDevice);
+        }
+        
+        // Function to load devices
+        async function loadDevices() {
+            try {
+                const response = await fetch('/api/devices');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const devices = data.devices;
+                    
+                    // Hide loading indicator
+                    loadingDevices.classList.add('d-none');
+                    
+                    if (devices && Object.keys(devices).length > 0) {
+                        // Show device list
+                        deviceList.classList.remove('d-none');
+                        
+                        // Clear existing rows
+                        deviceTableBody.innerHTML = '';
+                        
+                        // Add device rows
+                        Object.entries(devices).forEach(([deviceId, device]) => {
+                            const row = document.createElement('tr');
+                            
+                            // Highlight active device
+                            if (data.active_device === deviceId) {
+                                row.classList.add('table-active');
+                            }
+                            
+                            row.innerHTML = `
+                                <td>${device.name}</td>
+                                <td>${device.ip}</td>
+                                <td>
+                                    <span class="badge bg-secondary device-status" data-device-id="${deviceId}">Unknown</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary test-connection-btn" data-device-id="${deviceId}">
+                                            <i class="bi bi-lightning"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success set-active-btn" data-device-id="${deviceId}" ${data.active_device === deviceId ? 'disabled' : ''}>
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary edit-device-btn" data-device-id="${deviceId}" data-device-name="${device.name}" data-device-ip="${device.ip}" data-device-port="${device.port}" data-device-timeout="${device.timeout}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger delete-device-btn" data-device-id="${deviceId}" data-device-name="${device.name}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            `;
+                            
+                            deviceTableBody.appendChild(row);
+                        });
+                        
+                        // Add event listeners to buttons
+                        addDeviceButtonListeners();
+                        
+                        // Test connection status for all devices
+                        testAllDeviceConnections();
+                    } else {
+                        // Show no devices message
+                        noDevicesMessage.classList.remove('d-none');
+                    }
+                } else {
+                    // Show error
+                    loadingDevices.classList.add('d-none');
+                    noDevicesMessage.classList.remove('d-none');
+                    noDevicesMessage.innerHTML = `<p class="text-danger">Error loading devices: ${data.message}</p>`;
+                }
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                loadingDevices.classList.add('d-none');
+                noDevicesMessage.classList.remove('d-none');
+                noDevicesMessage.innerHTML = `<p class="text-danger">Error loading devices: ${error.message}</p>`;
+            }
+        }
+        
+        // Add event listeners to device action buttons
+        function addDeviceButtonListeners() {
+            // Test connection buttons
+            document.querySelectorAll('.test-connection-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const deviceId = e.currentTarget.dataset.deviceId;
+                    const statusBadge = document.querySelector(`.device-status[data-device-id="${deviceId}"]`);
+                    
+                    // Update status to testing
+                    statusBadge.textContent = 'Testing...';
+                    statusBadge.className = 'badge bg-info device-status';
+                    
+                    try {
+                        const response = await fetch(`/api/devices/${deviceId}/test-connection`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.status === 'success') {
+                            statusBadge.textContent = 'Connected';
+                            statusBadge.className = 'badge bg-success device-status';
+                        } else {
+                            statusBadge.textContent = 'Failed';
+                            statusBadge.className = 'badge bg-danger device-status';
+                        }
+                    } catch (error) {
+                        statusBadge.textContent = 'Error';
+                        statusBadge.className = 'badge bg-danger device-status';
+                        console.error(`Error testing connection for device ${deviceId}:`, error);
+                    }
+                });
+            });
+            
+            // Set active device buttons
+            document.querySelectorAll('.set-active-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const deviceId = e.currentTarget.dataset.deviceId;
+                    
+                    try {
+                        const response = await fetch(`/api/devices/${deviceId}/set-active`, {
+                            method: 'POST'
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.status === 'success') {
+                            // Reload devices to update UI
+                            loadDevices();
+                        } else {
+                            console.error(`Error setting device ${deviceId} as active:`, result.message);
+                        }
+                    } catch (error) {
+                        console.error(`Error setting device ${deviceId} as active:`, error);
+                    }
+                });
+            });
+            
+            // Edit device buttons
+            document.querySelectorAll('.edit-device-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const { deviceId, deviceName, deviceIp, devicePort, deviceTimeout } = e.currentTarget.dataset;
+                    
+                    // Set form values
+                    document.getElementById('edit_device_id').value = deviceId;
+                    document.getElementById('edit_device_name').value = deviceName;
+                    document.getElementById('edit_device_ip').value = deviceIp;
+                    document.getElementById('edit_device_port').value = devicePort;
+                    document.getElementById('edit_device_timeout').value = deviceTimeout;
+                    
+                    // Show modal
+                    const editModal = new bootstrap.Modal(document.getElementById('editDeviceModal'));
+                    editModal.show();
+                });
+            });
+            
+            // Delete device buttons
+            document.querySelectorAll('.delete-device-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const { deviceId, deviceName } = e.currentTarget.dataset;
+                    
+                    // Set values
+                    document.getElementById('delete_device_id').value = deviceId;
+                    document.getElementById('delete-device-name').textContent = deviceName;
+                    
+                    // Show modal
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteDeviceModal'));
+                    deleteModal.show();
+                });
+            });
+        }
+        
+        // Test connection for all devices
+        async function testAllDeviceConnections() {
+            document.querySelectorAll('.device-status').forEach(async (badge) => {
+                const deviceId = badge.dataset.deviceId;
+                
+                // Update status to testing
+                badge.textContent = 'Testing...';
+                badge.className = 'badge bg-info device-status';
+                
+                try {
+                    const response = await fetch(`/api/devices/${deviceId}/test-connection`, {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        badge.textContent = 'Connected';
+                        badge.className = 'badge bg-success device-status';
+                    } else {
+                        badge.textContent = 'Failed';
+                        badge.className = 'badge bg-danger device-status';
+                    }
+                } catch (error) {
+                    badge.textContent = 'Error';
+                    badge.className = 'badge bg-danger device-status';
+                    console.error(`Error testing connection for device ${deviceId}:`, error);
+                }
+            });
+        }
+        
+        // Add new device
+        async function addDevice() {
+            // Get form values
+            const deviceName = document.getElementById('device_name').value;
+            const deviceId = document.getElementById('device_id').value;
+            const deviceIp = document.getElementById('device_ip').value;
+            const devicePort = document.getElementById('device_port').value;
+            const deviceTimeout = document.getElementById('device_timeout').value;
+            
+            // Validate required fields
+            if (!deviceName || !deviceId || !deviceIp) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/devices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        name: deviceName,
+                        ip: deviceIp,
+                        port: parseInt(devicePort),
+                        timeout: parseInt(deviceTimeout)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addDeviceModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    document.getElementById('add-device-form').reset();
+                    
+                    // Reload devices
+                    loadDevices();
+                } else {
+                    alert(`Error adding device: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error adding device:', error);
+                alert(`Error adding device: ${error.message}`);
+            }
+        }
+        
+        // Update device
+        async function updateDevice() {
+            // Get form values
+            const deviceId = document.getElementById('edit_device_id').value;
+            const deviceName = document.getElementById('edit_device_name').value;
+            const deviceIp = document.getElementById('edit_device_ip').value;
+            const devicePort = document.getElementById('edit_device_port').value;
+            const deviceTimeout = document.getElementById('edit_device_timeout').value;
+            
+            // Validate required fields
+            if (!deviceName || !deviceIp) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/devices/${deviceId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: deviceName,
+                        ip: deviceIp,
+                        port: parseInt(devicePort),
+                        timeout: parseInt(deviceTimeout)
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editDeviceModal'));
+                    modal.hide();
+                    
+                    // Reload devices
+                    loadDevices();
+                } else {
+                    alert(`Error updating device: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error updating device:', error);
+                alert(`Error updating device: ${error.message}`);
+            }
+        }
+        
+        // Delete device
+        async function deleteDevice() {
+            const deviceId = document.getElementById('delete_device_id').value;
+            
+            try {
+                const response = await fetch(`/api/devices/${deviceId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteDeviceModal'));
+                    modal.hide();
+                    
+                    // Reload devices
+                    loadDevices();
+                } else {
+                    alert(`Error deleting device: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting device:', error);
+                alert(`Error deleting device: ${error.message}`);
+            }
+        }
+    });
+</script>
+{% endblock %}

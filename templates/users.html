@@ -1,28 +1,196 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Users - ZK Device Management{% endblock %}
+{% block title %}User Management - ZK Attendance System{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Device Users</h5>
-                <div>
-                    <button class="btn btn-sm btn-outline-primary" id="refreshBtn">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">User Management</h1>
+        <p class="text-muted">Add, import, and delete users from your ZK device</p>
+    </div>
+</div>
+
+<!-- Device Connection Alert -->
+{% if not session.get('device_ip') %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading">No Device Connected</h5>
+                    <p class="mb-0">Connect to your ZK device to manage users.</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <a href="{{ url_for('connect') }}" class="btn btn-warning">
+                        <i class="bi bi-plug"></i> Connect Device
+                    </a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Management Tabs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">User Management</h5>
+            </div>
             <div class="card-body">
-                <div id="usersContainer">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                <ul class="nav nav-tabs" id="userTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-content" type="button" role="tab" aria-controls="users-content" aria-selected="true">
+                            <i class="bi bi-people"></i> Device Users
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-content" type="button" role="tab" aria-controls="add-content" aria-selected="false">
+                            <i class="bi bi-person-plus"></i> Add User
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import-content" type="button" role="tab" aria-controls="import-content" aria-selected="false">
+                            <i class="bi bi-cloud-download"></i> Import from URL
+                        </button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="userTabsContent">
+                    <!-- Users List Tab -->
+                    <div class="tab-pane fade show active" id="users-content" role="tabpanel" aria-labelledby="users-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Device Users</h5>
+                            <button id="refresh-users" class="btn btn-sm btn-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
                         </div>
-                        <p class="mt-2">Loading users...</p>
+                        
+                        <div id="users-loading" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading users...</p>
+                        </div>
+                        
+                        <div id="no-users" class="text-center py-5 d-none">
+                            <i class="bi bi-people text-muted fs-1"></i>
+                            <p class="mt-2">No users found on the device.</p>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Privilege</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table">
+                                    <!-- Users will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Add User Tab -->
+                    <div class="tab-pane fade" id="add-content" role="tabpanel" aria-labelledby="add-tab">
+                        <h5 class="mb-3">Add New User</h5>
+                        
+                        <form id="add-user-form">
+                            <div class="mb-3">
+                                <label for="user-id" class="form-label">User ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="user-id" required>
+                                <div class="form-text">Unique identifier for the user</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="user-name" class="form-label">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="user-name" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="user-privilege" class="form-label">Privilege</label>
+                                <select class="form-select" id="user-privilege">
+                                    <option value="0" selected>User (0)</option>
+                                    <option value="1">Admin (1)</option>
+                                    <option value="2">Superadmin (2)</option>
+                                    <option value="3">Enrollment (3)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="user-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="user-password">
+                                <div class="form-text">Leave empty for no password</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-person-plus"></i> Add User
+                            </button>
+                        </form>
+                        
+                        <div id="add-user-result" class="mt-3 d-none">
+                            <!-- Result message will appear here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Import from URL Tab -->
+                    <div class="tab-pane fade" id="import-content" role="tabpanel" aria-labelledby="import-tab">
+                        <h5 class="mb-3">Import Users from URL</h5>
+                        
+                        <form id="import-users-form">
+                            <div class="mb-3">
+                                <label for="api-url" class="form-label">API URL <span class="text-danger">*</span></label>
+                                <input type="url" class="form-control" id="api-url" required>
+                                <div class="form-text">URL to fetch user data from (must return JSON with emp_id field)</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cloud-download"></i> Import Users
+                            </button>
+                        </form>
+                        
+                        <div id="import-loading" class="text-center py-3 mt-3 d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Importing users...</p>
+                        </div>
+                        
+                        <div id="import-result" class="mt-3 d-none">
+                            <!-- Import result will appear here -->
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">Delete User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete user <strong id="delete-user-id"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-user">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
             </div>
         </div>
     </div>
@@ -31,123 +199,329 @@
 
 {% block extra_js %}
 <script>
-    // Notification function
-    function showNotification(message, type = 'success') {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-        alertDiv.style.zIndex = 1050;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        document.body.appendChild(alertDiv);
-        
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alertDiv.classList.remove('show');
-            setTimeout(() => alertDiv.remove(), 150);
-        }, 5000);
-    }
-
-    // Load users
+    // Load users from device
     async function loadUsers() {
-        const usersContainer = document.getElementById('usersContainer');
+        const loadingIndicator = document.getElementById('users-loading');
+        const noUsers = document.getElementById('no-users');
+        const usersTable = document.getElementById('users-table');
+        
+        loadingIndicator.classList.remove('d-none');
+        noUsers.classList.add('d-none');
+        usersTable.innerHTML = '';
         
         try {
-            usersContainer.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Loading users...</p>
-                </div>
-            `;
-            
             const response = await fetch('/api/users');
+            const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            loadingIndicator.classList.add('d-none');
+            
+            if (data.status === 'success') {
+                const users = data.users || [];
+                
+                if (users.length === 0) {
+                    noUsers.classList.remove('d-none');
+                    return;
+                }
+                
+                // Sort users by user_id
+                const sortedUsers = [...users].sort((a, b) => {
+                    return a.user_id.localeCompare(b.user_id);
+                });
+                
+                sortedUsers.forEach(user => {
+                    const row = document.createElement('tr');
+                    
+                    // User ID
+                    const userIdCell = document.createElement('td');
+                    userIdCell.textContent = user.user_id;
+                    row.appendChild(userIdCell);
+                    
+                    // Name
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = user.name || 'Unknown';
+                    row.appendChild(nameCell);
+                    
+                    // Privilege
+                    const privilegeCell = document.createElement('td');
+                    let privilegeText = 'User';
+                    let badgeClass = 'bg-secondary';
+                    
+                    if (user.privilege === 0 || user.privilege === '0') {
+                        privilegeText = 'User';
+                        badgeClass = 'bg-secondary';
+                    } else if (user.privilege === 1 || user.privilege === '1') {
+                        privilegeText = 'Admin';
+                        badgeClass = 'bg-primary';
+                    } else if (user.privilege === 2 || user.privilege === '2') {
+                        privilegeText = 'Superadmin';
+                        badgeClass = 'bg-danger';
+                    } else if (user.privilege === 3 || user.privilege === '3') {
+                        privilegeText = 'Enrollment';
+                        badgeClass = 'bg-warning';
+                    }
+                    
+                    privilegeCell.innerHTML = `<span class="badge ${badgeClass}">${privilegeText}</span>`;
+                    row.appendChild(privilegeCell);
+                    
+                    // Actions
+                    const actionsCell = document.createElement('td');
+                    actionsCell.innerHTML = `
+                        <button class="btn btn-sm btn-danger delete-user" data-user-id="${user.user_id}" data-user-name="${user.name || 'Unknown'}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    `;
+                    row.appendChild(actionsCell);
+                    
+                    usersTable.appendChild(row);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-user').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const userId = this.getAttribute('data-user-id');
+                        const userName = this.getAttribute('data-user-name');
+                        showDeleteModal(userId, userName);
+                    });
+                });
+            } else {
+                noUsers.classList.remove('d-none');
+                noUsers.innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <p class="mt-2">Error loading users: ${data.message}</p>
+                `;
             }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            loadingIndicator.classList.add('d-none');
+            noUsers.classList.remove('d-none');
+            noUsers.innerHTML = `
+                <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                <p class="mt-2">Error loading users: ${error.message}</p>
+                <button class="btn btn-sm btn-primary mt-2" onclick="loadUsers()">
+                    <i class="bi bi-arrow-clockwise"></i> Retry
+                </button>
+            `;
+        }
+    }
+    
+    // Show delete user modal
+    function showDeleteModal(userId, userName) {
+        const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+        document.getElementById('delete-user-id').textContent = `${userId} (${userName})`;
+        
+        // Set up delete confirmation button
+        document.getElementById('confirm-delete-user').onclick = function() {
+            deleteUser(userId);
+            modal.hide();
+        };
+        
+        modal.show();
+    }
+    
+    // Delete user
+    async function deleteUser(userId) {
+        try {
+            const response = await fetch(`/api/users/${userId}`, {
+                method: 'DELETE'
+            });
             
             const data = await response.json();
             
-            if (data.message) {
-                usersContainer.innerHTML = `
-                    <div class="alert alert-warning">
-                        ${data.message}
-                    </div>
-                `;
-                return;
+            if (data.status === 'success') {
+                showAlert('success', `User ${userId} deleted successfully`);
+                loadUsers(); // Reload the users list
+            } else {
+                showAlert('danger', `Error deleting user: ${data.message}`);
             }
-            
-            if (!data.length) {
-                usersContainer.innerHTML = `
-                    <div class="alert alert-info">
-                        No users found on the device.
-                    </div>
-                `;
-                return;
-            }
-            
-            // Create users table
-            let html = `
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>User ID</th>
-                                <th>Name</th>
-                                <th>Privilege</th>
-                                <th>Card</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            // Map privilege levels to readable names
-            const privilegeMap = {
-                0: 'User',
-                1: 'Enroller',
-                2: 'Admin',
-                3: 'Super Admin',
-                14: 'Super Admin'
-            };
-            
-            for (const user of data) {
-                html += `
-                    <tr>
-                        <td>${user.user_id}</td>
-                        <td>${user.name || 'N/A'}</td>
-                        <td>${privilegeMap[user.privilege] || user.privilege}</td>
-                        <td>${user.card || 'N/A'}</td>
-                    </tr>
-                `;
-            }
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-muted mt-2">Total users: ${data.length}</p>
-            `;
-            
-            usersContainer.innerHTML = html;
-            
         } catch (error) {
-            console.error('Error loading users:', error);
-            usersContainer.innerHTML = `
+            console.error('Error deleting user:', error);
+            showAlert('danger', `Error deleting user: ${error.message}`);
+        }
+    }
+    
+    // Add user
+    async function addUser(event) {
+        event.preventDefault();
+        
+        const userId = document.getElementById('user-id').value;
+        const userName = document.getElementById('user-name').value;
+        const userPrivilege = document.getElementById('user-privilege').value;
+        const userPassword = document.getElementById('user-password').value;
+        
+        const resultDiv = document.getElementById('add-user-result');
+        resultDiv.classList.remove('d-none');
+        resultDiv.innerHTML = `
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <span class="ms-2">Adding user...</span>
+        `;
+        
+        try {
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: userId,
+                    name: userName,
+                    privilege: parseInt(userPrivilege),
+                    password: userPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> ${data.message}
+                    </div>
+                `;
+                document.getElementById('add-user-form').reset();
+                loadUsers(); // Reload the users list
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i> ${data.message}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error adding user:', error);
+            resultDiv.innerHTML = `
                 <div class="alert alert-danger">
-                    Error loading users: ${error.message}
+                    <i class="bi bi-exclamation-triangle"></i> Error adding user: ${error.message}
                 </div>
             `;
         }
     }
     
-    // Event listeners
+    // Import users from URL
+    async function importUsers(event) {
+        event.preventDefault();
+        
+        const apiUrl = document.getElementById('api-url').value;
+        const loadingIndicator = document.getElementById('import-loading');
+        const resultDiv = document.getElementById('import-result');
+        
+        loadingIndicator.classList.remove('d-none');
+        resultDiv.classList.add('d-none');
+        
+        try {
+            const response = await fetch('/api/add-users-from-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url: apiUrl
+                })
+            });
+            
+            const data = await response.json();
+            loadingIndicator.classList.add('d-none');
+            resultDiv.classList.remove('d-none');
+            
+            if (data.status === 'success') {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <h5><i class="bi bi-check-circle"></i> Import Successful</h5>
+                        <p>Added ${data.success_count} out of ${data.success_count + data.failed_count} users to the device.</p>
+                        <p>Skipped ${data.skipped_count || 0} existing users.</p>
+                    </div>
+                `;
+                
+                // Show failed users if any
+                if (data.failed_count > 0) {
+                    let failedHtml = `
+                        <div class="mt-3">
+                            <h6>Failed Users (${data.failed_count}):</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>User ID</th>
+                                            <th>Name</th>
+                                            <th>Error</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    data.failed_users.forEach(user => {
+                        failedHtml += `
+                            <tr>
+                                <td>${user.emp_id || 'N/A'}</td>
+                                <td>${user.name || 'N/A'}</td>
+                                <td>${user.error}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    failedHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultDiv.innerHTML += failedHtml;
+                }
+                
+                loadUsers(); // Reload the users list
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Import Failed</h5>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error importing users:', error);
+            loadingIndicator.classList.add('d-none');
+            resultDiv.classList.remove('d-none');
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5><i class="bi bi-exclamation-triangle"></i> Import Failed</h5>
+                    <p>Error importing users: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Show alert message
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the page
+        document.querySelector('.row:first-child').insertAdjacentElement('afterend', alertDiv);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 150);
+        }, 5000);
+    }
+    
+    // Initialize page
     document.addEventListener('DOMContentLoaded', () => {
+        // Load users
         loadUsers();
         
-        document.getElementById('refreshBtn').addEventListener('click', loadUsers);
+        // Set up refresh button
+        document.getElementById('refresh-users').addEventListener('click', loadUsers);
+        
+        // Set up form submissions
+        document.getElementById('add-user-form').addEventListener('submit', addUser);
+        document.getElementById('import-users-form').addEventListener('submit', importUsers);
     });
 </script>
 {% endblock %}

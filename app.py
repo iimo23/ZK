@@ -1,107 +1,155 @@
-from flask import Flask, jsonify, request, render_template, redirect, url_for, session
+
+from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash, has_request_context
 from flask_cors import CORS
 from zk import ZK, const
 from datetime import datetime, timedelta
 from collections import defaultdict
 import requests
 import logging
-from functools import wraps
 import os
 import json
 import sys
 import time
+import re
+import threading
+from functools import wraps
+
+# Disable SSL warnings to clean up console output
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # For session management
+app.secret_key = os.urandom(24)
 CORS(app)
 
-# Configure logging
-LOG_LEVEL = logging.INFO
+# Add context processor to provide 'now' variable to all templates
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now()}
+
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
 
-# Set up app logger
-logger = logging.getLogger(__name__)
-logger.setLevel(LOG_LEVEL)
+# Setup file handler with INFO level
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter(LOG_FORMAT))
 
-# Suppress verbose logging from other libraries
+# Setup console handler with WARNING level to reduce console output
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.WARNING)
+console_handler.setFormatter(logging.Formatter(LOG_FORMAT))
+
+# Configure root logger
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
+
+# Get application logger
+logger = logging.getLogger('zk-app')
+
+# Set other loggers to WARNING level
 logging.getLogger('zk').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('werkzeug').setLevel(logging.WARNING)
 
-# Default device settings
-DEFAULT_IP = '192.168.37.10'
 DEFAULT_PORT = 4370
 DEFAULT_TIMEOUT = 5
 
-# Ensure config directory exists
+# Define the exact path to config.json and devices.json
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
+DEVICES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'devices.json')
+
+# Create config directory if it doesn't exist
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'config')
 if not os.path.exists(CONFIG_DIR):
     os.makedirs(CONFIG_DIR)
 
-# Update export config path
-def get_config_path(filename):
-    return os.path.join(CONFIG_DIR, filename)
+def get_config():
+    """Get configuration from config.json file
+    
+    If the config file doesn't exist, creates it with default values
+    """
+    # Use the global CONFIG_PATH
+    config_file = CONFIG_PATH
+    logger.info(f"Loading config from: {config_file}")
+    
+    # Get registered devices if available
+    registered_devices = {}
+    devices_file = os.path.join(os.path.dirname(__file__), 'devices.json')
+    logger.info(f"Checking for legacy devices file at: {devices_file}")
+    if os.path.exists(devices_file):
+        try:
+            with open(devices_file, 'r') as f:
+                registered_devices = json.load(f)
+            logger.info(f"Loaded {len(registered_devices)} devices from legacy file")
+        except Exception as e:
+            logger.error(f"Error reading devices file: {str(e)}")
+    
+    # Default configuration
+    default_config = {
+        "attendance_api_url": "",  # Empty by default, will be set during first-time setup
+        "registered_devices": registered_devices,
+        "first_run": True  # Flag to indicate first-time run
+    }
+    
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+                
+                # If config exists but doesn't have registered_devices, add them
+                if "registered_devices" not in config and registered_devices:
+                    config["registered_devices"] = registered_devices
+                    save_config(config)
+                    
+                return config
+        except Exception as e:
+            logger.error(f"Error reading config file: {str(e)}")
+            # If there's an error reading the file, create a new one with defaults
+            logger.info("Creating new config file with default values")
+            save_config(default_config)
+            return default_config
+    else:
+        # First time running the app, create the config file
+        logger.info("Config file not found. Creating with default values")
+        save_config(default_config)
+        return default_config
 
-# Device connection helper
-def connect_to_device(ip=None, port=None, timeout=None):
-    """Connect to ZK device using session information or provided credentials"""
+def save_config(config):
+    """Save configuration to config.json file"""
+    # Use the global CONFIG_PATH
+    config_file = CONFIG_PATH
+    logger.info(f"Saving config to: {config_file}")
+    
     try:
-        # First try to get credentials from headers
-        if request and request.headers:
-            ip = ip or request.headers.get('X-Device-IP')
-            try:
-                port = port or int(request.headers.get('X-Device-Port', DEFAULT_PORT))
-            except (TypeError, ValueError):
-                port = DEFAULT_PORT
-        
-        # If no headers, try session
-        if not ip and 'device_ip' in session:
-            ip = session.get('device_ip')
-            port = session.get('device_port', DEFAULT_PORT)
-        
-        # Final fallback to defaults
-        ip = ip or DEFAULT_IP
-        port = port or DEFAULT_PORT
-        timeout = timeout or DEFAULT_TIMEOUT
-
-        logger.info(f"Attempting to connect to device at {ip}:{port} with timeout {timeout}")
-        
-        # Validate IP address format
-        if not ip or not isinstance(ip, str):
-            raise ValueError("Invalid IP address format")
-
-        # Create ZK instance with more reliable settings
-        zk = ZK(ip, 
-               port=port, 
-               timeout=timeout, 
-               force_udp=False, 
-               ommit_ping=True,  # Changed to True to avoid initial ping
-               verbose=False)    # Set to False to reduce debug output
-        
-        # Attempt connection
-        conn = zk.connect()
-        if not conn:
-            raise ConnectionError("Failed to establish connection - no connection object returned")
-        
-        # Test if connection is alive
-        if not conn.is_connect:
-            raise ConnectionError("Connection object created but not connected")
-            
-        logger.info("Successfully connected to device")
-        return conn
-        
-    except ValueError as ve:
-        logger.error(f"Validation error: {str(ve)}")
-        raise Exception(f"Invalid connection parameters: {str(ve)}")
-    except ConnectionError as ce:
-        logger.error(f"Connection error: {str(ce)}")
-        raise Exception(f"Failed to connect to device: {str(ce)}")
+        with open(config_file, 'w') as f:
+            json.dump(config, f, indent=4)
+            f.flush()
+            os.fsync(f.fileno())  # Force write to disk
+        logger.info(f"Config saved successfully to {config_file}")
     except Exception as e:
-        logger.error(f"Unexpected error during connection: {str(e)}")
-        raise Exception(f"Error connecting to device: {str(e)}")
+        logger.error(f"Error saving config file: {str(e)}")
+        raise
 
-# Utility Functions (unchanged)
+def connect_to_device(device_id=None):
+    """Connect to ZK device using the device manager
+    
+    Works both inside and outside of Flask request context.
+    If device_id is provided, it will connect to that specific device.
+    Otherwise, it will use the active device from the device manager.
+    """
+    # Import here to avoid circular imports
+    from device_manager import device_manager
+    
+    # If no devices are registered, raise an error
+    if not device_manager.get_all_devices():
+        raise ValueError("No devices registered. Please add a device in the settings.")
+    
+    try:
+        # Connect using device manager
+        return device_manager.connect_to_device(device_id)
+    except Exception as e:
+        logger.error(f"Error connecting to device: {str(e)}")
+        raise ConnectionError(f"Failed to connect to device: {str(e)}")
+
 def get_punch_type_text(punch_type):
     punch_dict = {0: "1", 1: "2", 2: "3", 3: "4", 4: "5", 5: "6"}
     return punch_dict.get(punch_type, "Unknown")
@@ -121,51 +169,53 @@ def organize_attendance(attendance_records):
             date = record.timestamp.strftime('%Y-%m-%d')
             daily_records[date].append({
                 'time': record.timestamp.strftime('%H:%M:%S'),
-                'punch_type': get_punch_type_text(punch)
+                'punch': get_punch_type_text(punch)
             })
         
-        organized_records[str(user_id)] = {
-            date: {"records": sorted(times, key=lambda x: x['time'])}
-            for date, times in daily_records.items()
+        organized_records[user_id] = {
+            'user_id': user_id,
+            'daily_records': dict(daily_records)
         }
     
     return organized_records
 
-# Add session check decorator
 def require_device_connection(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check headers first
-        if request.headers.get('X-Device-IP'):
-            return f(*args, **kwargs)
-        # Then check session
-        if 'device_ip' in session:
-            return f(*args, **kwargs)
-        return jsonify({
-            "status": "error", 
-            "message": "No device connected. Please provide device information via headers (X-Device-IP, X-Device-Port) or connect through the web interface."
-        }), 401
+        # Import here to avoid circular imports
+        from device_manager import device_manager
+        
+        # Check if we have any registered devices
+        if not device_manager.get_all_devices():
+            return jsonify({"status": "error", "message": "No devices registered. Please add a device in the settings."}), 400
+        
+        # Check if we have an active device
+        active_device_id = device_manager.get_active_device_id()
+        if not active_device_id:
+            return jsonify({"status": "error", "message": "No active device selected. Please select a device in the settings."}), 400
+        
+        # All checks passed, continue with the function
+        return f(*args, **kwargs)
     return decorated_function
 
-# API Endpoints
 @app.route('/api/device-info', methods=['GET'])
 @require_device_connection
 def get_device_info():
     try:
         conn = connect_to_device()
-        try:
-            info = {
-                "status": "Connected",
-                "firmware": conn.get_firmware_version(),
-                "serial": conn.get_serialnumber(),
-                "platform": conn.get_platform(),
-                "device_name": conn.get_device_name(),
-                "ip": session.get('device_ip') or request.headers.get('X-Device-IP'),
-                "port": session.get('device_port') or request.headers.get('X-Device-Port', 4370)
-            }
-            return jsonify({"status": "success", "data": info})
-        finally:
-            conn.disconnect()
+        info = conn.get_device_info()
+        
+        device_info = {
+            "status": "success",
+            "serial_number": info.serial_number,
+            "oem_vendor": info.oem_vendor,
+            "platform": info.platform,
+            "firmware_version": info.firmware_version,
+            "mac": info.mac
+        }
+        
+        conn.disconnect()
+        return jsonify(device_info)
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -173,528 +223,190 @@ def get_device_info():
 @require_device_connection
 def get_users():
     try:
-        logger.info("Attempting to get users")
         conn = connect_to_device()
         try:
             logger.info("Connected to device, fetching users...")
             users = conn.get_users()
             
             if not users:
-                logger.warning("No users found in the device")
-                return jsonify({"status": "success", "data": [], "message": "No users found in the device"})
-                
+                logger.warning("No users found on device")
+                return jsonify({"status": "success", "users": []})
+            
             logger.info(f"Found {len(users)} users")
             
-            # Debug output for troubleshooting
-            for i, user in enumerate(users):
-                logger.info(f"User {i+1}: ID={user.user_id}, Name={user.name}, UID={user.uid}, Privilege={user.privilege}")
-            
-            user_list = []
+            formatted_users = []
             for user in users:
-                try:
-                    # Ensure all fields are properly converted to strings
-                    user_data = {
-                        'uid': str(user.uid) if hasattr(user, 'uid') else 'N/A',
-                        'emp_no': str(user.user_id) if hasattr(user, 'user_id') else 'N/A',
-                        'name': str(user.name) if hasattr(user, 'name') else 'N/A',
-                        'privilege': int(user.privilege) if hasattr(user, 'privilege') else 0,
-                    }
-                    user_list.append(user_data)
-                    logger.debug(f"Processed user: {user_data}")
-                except Exception as ae:
-                    logger.error(f"Error processing user data: {str(ae)}")
-                    continue
-                    
-            logger.info(f"Successfully processed {len(user_list)} users")
-            return jsonify({
-                "status": "success", 
-                "data": user_list,
-                "count": len(user_list)
-            })
-        except Exception as e:
-            error_msg = f"Error getting users: {str(e)}"
-            logger.error(error_msg)
-            return jsonify({"status": "error", "message": error_msg}), 500
+                formatted_users.append({
+                    "id": user.user_id,
+                    "name": user.name,
+                    "uid": user.uid,
+                    "privilege": user.privilege,
+                    "password": user.password if hasattr(user, 'password') else "",
+                    "group_id": user.group_id if hasattr(user, 'group_id') else "",
+                    "card": user.card if hasattr(user, 'card') else ""
+                })
+            
+            logger.info(f"Successfully processed {len(formatted_users)} users")
+            return jsonify({"status": "success", "users": formatted_users})
         finally:
-            try:
-                conn.disconnect()
-                logger.info("Device disconnected")
-            except Exception as e:
-                logger.warning(f"Error disconnecting from device: {str(e)}")
+            conn.disconnect()
+            logger.info("Device disconnected")
     except Exception as e:
-        error_msg = f"Error in users endpoint: {str(e)}"
+        error_msg = f"Error fetching users: {str(e)}"
         logger.error(error_msg)
         return jsonify({"status": "error", "message": error_msg}), 500
 
-@app.route('/api/attendance', methods=['GET', 'POST'])
+@app.route('/api/attendance', methods=['GET'])
 @require_device_connection
 def get_attendance():
     try:
-        # Handle both GET and POST requests
-        if request.method == 'POST':
-            data = request.get_json()
-            start_date = data.get('start_date') if data else None
-            end_date = data.get('end_date') if data else None
-            emp_no = data.get('emp_no') if data else None
-        else:
-            start_date = request.args.get('start_date')
-            end_date = request.args.get('end_date')
-            emp_no = request.args.get('emp_no')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        emp_no = request.args.get('emp_no')
         
         logger.info(f"Getting attendance records: start_date={start_date}, end_date={end_date}, emp_no={emp_no}")
         
         conn = connect_to_device()
         try:
-            attendance = conn.get_attendance()
-            records = []
+            attendance_records = conn.get_attendance()
+            logger.info(f"Retrieved {len(attendance_records)} attendance records")
             
-            for record in attendance:
-                # Create basic record
-                record_data = {
-                    'emp_no': str(record.user_id),
-                    'name': str(record.user_id),  # Will be updated with real name
-                    'punch_time': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                    'punch_type': get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
-                    'punch_date': record.timestamp.strftime('%Y-%m-%d'),
-                    'terminal_id': "ZK",
-                    'source': "ZK_DEVICE"
-                }
+            if not attendance_records:
+                return jsonify({"status": "success", "records": []})
+            
+            filtered_records = attendance_records
+            if start_date or end_date:
+                filtered_records = []
+                start_dt = datetime.strptime(start_date, '%Y-%m-%d') if start_date else datetime.min
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d') if end_date else datetime.max
                 
-                # Apply date filter if specified
-                if start_date and end_date:
-                    record_date = record.timestamp.strftime('%Y-%m-%d')
-                    if record_date < start_date or record_date > end_date:
-                        continue
+                if end_date:
+                    end_dt = end_dt.replace(hour=23, minute=59, second=59)
                 
-                # Apply employee filter if specified
-                if emp_no and str(record.user_id) != str(emp_no):
-                    continue
-                
-                records.append(record_data)
+                for record in attendance_records:
+                    if start_dt <= record.timestamp <= end_dt:
+                        filtered_records.append(record)
             
-            # Sort records by timestamp in descending order
-            records.sort(key=lambda x: x['punch_time'], reverse=True)
+            if emp_no:
+                filtered_records = [r for r in filtered_records if str(r.user_id) == emp_no]
             
-            # Update names from users list
-            try:
-                users = conn.get_users()
-                user_dict = {str(user.user_id): user.name for user in users}
-                for record in records:
-                    record['name'] = user_dict.get(str(record['emp_no']), str(record['emp_no']))
-            except Exception as e:
-                logger.warning(f"Failed to get user names: {e}")
+            formatted_records = []
+            for record in filtered_records:
+                formatted_records.append({
+                    "user_id": record.user_id,
+                    "timestamp": record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                    "punch": get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
+                    "status": record.status if hasattr(record, 'status') else 0,
+                    "punch_type": record.punch if hasattr(record, 'punch') else 0
+                })
             
-            logger.info(f"Retrieved {len(records)} attendance records")
-            return jsonify({"status": "success", "records": records})
+            return jsonify({"status": "success", "attendance": formatted_records})
         finally:
             conn.disconnect()
+            logger.info("Device disconnected")
     except Exception as e:
-        logger.error(f"Error getting attendance: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        error_msg = f"Error fetching attendance: {str(e)}"
+        logger.error(error_msg)
+        return jsonify({"status": "error", "message": error_msg}), 500
 
-@app.route('/api/user', methods=['POST'])
+@app.route('/api/users', methods=['POST'])
 @require_device_connection
 def add_user():
     try:
-        logger.info("Attempting to add user")
-        if not request.is_json:
-            return jsonify({"status": "error", "message": "Content-Type must be application/json"}), 400
-            
-        data = request.get_json()
+        data = request.json
+        if not data:
+            return jsonify({"status": "error", "message": "No data provided"}), 400
         
-        if not all(key in data for key in ['emp_no', 'name', 'privilege']):
-            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+        user_id = data.get('id')
+        name = data.get('name')
+        
+        if not user_id or not name:
+            return jsonify({"status": "error", "message": "User ID and name are required"}), 400
         
         conn = connect_to_device()
-        
         try:
             conn.set_user(
-                uid=int(data['emp_no']),
-                name=data['name'],
-                privilege=int(data['privilege']),
-                password='',
-                group_id='',
-                user_id=data['emp_no']
+                user_id=user_id,
+                name=name,
+                privilege=data.get('privilege', 0),
+                password=data.get('password', ''),
+                group_id=data.get('group_id', 0),
+                card=data.get('card', 0)
             )
-            logger.info("User added successfully")
-            return jsonify({"status": "success", "message": "User added successfully"})
-        except Exception as e:
-            error_msg = f"Error adding user: {str(e)}"
-            logger.error(error_msg)
-            return jsonify({"status": "error", "message": error_msg}), 500
+            
+            logger.info(f"User added successfully: ID={user_id}, Name={name}")
+            return jsonify({"status": "success", "message": f"User {name} added successfully"})
         finally:
-            try:
-                conn.disconnect()
-                logger.info("Device disconnected")
-            except:
-                logger.warning("Error disconnecting from device")
+            conn.disconnect()
+            logger.info("Device disconnected")
     except Exception as e:
-        error_msg = f"Error in add user endpoint: {str(e)}"
+        error_msg = f"Error adding user: {str(e)}"
         logger.error(error_msg)
         return jsonify({"status": "error", "message": error_msg}), 500
 
-@app.route('/api/user/<emp_no>', methods=['DELETE'])
-@require_device_connection
-def delete_user(emp_no):
-    try:
-        logger.info("Attempting to delete user")
-        conn = connect_to_device()
-        try:
-            conn.delete_user(user_id=emp_no)
-            logger.info("User deleted successfully")
-            return jsonify({"status": "success", "message": "User deleted successfully"})
-        except Exception as e:
-            error_msg = f"Error deleting user: {str(e)}"
-            logger.error(error_msg)
-            return jsonify({"status": "error", "message": error_msg}), 500
-        finally:
-            try:
-                conn.disconnect()
-                logger.info("Device disconnected")
-            except:
-                logger.warning("Error disconnecting from device")
-    except Exception as e:
-        error_msg = f"Error in delete user endpoint: {str(e)}"
-        logger.error(error_msg)
-        return jsonify({"status": "error", "message": error_msg}), 500
-
-@app.route('/api/add-users-url', methods=['POST'])
-@require_device_connection
-def add_users():
-    # Unchanged code omitted for brevity
-    pass  # Replace with your existing implementation
 
 @app.route('/api/test-connection', methods=['POST'])
 def test_connection():
-    # Get device info from form data or headers
-    ip = request.form.get('ip') or request.headers.get('X-Device-IP')
     try:
-        port = int(request.form.get('port', 4370)) if request.form.get('port') else int(request.headers.get('X-Device-Port', 4370))
-    except (TypeError, ValueError):
-        port = 4370
-    
-    if not ip:
-        return jsonify({"status": "error", "message": "Device IP is required"}), 400
-    
-    try:
-        zk = ZK(ip, port=port)
-        conn = zk.connect()
+        data = request.json or {}
+        ip = data.get('ip') or request.headers.get('X-Device-IP')
+        port = data.get('port') or request.headers.get('X-Device-Port')
+        timeout = data.get('timeout') or request.headers.get('X-Device-Timeout')
         
-        info = {
-            "status": "Connected",
-            "firmware": conn.get_firmware_version(),
-            "serial": conn.get_serialnumber(),
-            "platform": conn.get_platform(),
-            "device_name": conn.get_device_name(),
-        }
-        conn.disconnect()
-        return jsonify({"status": "success", "data": info})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
-
-# Configuration endpoints
-@app.route('/api/export-config', methods=['GET', 'POST'])
-def export_config():
-    config_file = get_config_path('export_config.json')
-    if request.method == 'POST':
+        if not ip:
+            return jsonify({"status": "error", "message": "IP address is required"}), 400
+        
         try:
-            config = request.get_json()
-            with open(config_file, 'w') as f:
-                json.dump(config, f)
-            return jsonify({"status": "success", "message": "Export configuration saved"})
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)}), 500
-    else:
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-            return jsonify({"status": "success", "data": config})
-        except FileNotFoundError:
-            return jsonify({"status": "success", "data": {
-                "export_url": "",
-                "auto_export": False
-            }})
-        except Exception as e:
-            return jsonify({"status": "error", "message": str(e)}), 500
-
-# Export endpoint
-@app.route('/api/export-attendance', methods=['POST'])
-@require_device_connection
-def export_attendance():
-    try:
-        # Get export configuration
-        config_file = get_config_path('export_config.json')
-        try:
-            with open(config_file, 'r') as f:
-                config = json.load(f)
-        except FileNotFoundError:
-            return jsonify({
-                "status": "error",
-                "message": "Export configuration not found. Please configure export settings first."
-            }), 400
-
-        export_url = config.get('export_url')
-        if not export_url:
-            return jsonify({
-                "status": "error",
-                "message": "Export URL must be configured"
-            }), 400
-
-        # Get request data
-        request_data = request.get_json() or {}
-        selected_records = request_data.get('records', [])
-
-        # If no records provided, get all attendance
-        if not selected_records:
-            conn = connect_to_device()
-            try:
-                attendance = conn.get_attendance()
-                users = {str(user.user_id): user.name for user in conn.get_users()}
-                
-                # Format data for export
-                records = []
-                for record in attendance:
-                    record_data = {
-                        'employee_id': str(record.user_id),
-                        'employee_name': users.get(str(record.user_id), 'Unknown'),
-                        'timestamp': record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-                        'date': record.timestamp.strftime('%Y-%m-%d'),
-                        'time': record.timestamp.strftime('%H:%M:%S'),
-                        'punch_type': get_punch_type_text(record.punch if hasattr(record, 'punch') else 0)
-                    }
-                    records.append(record_data)
-            finally:
-                conn.disconnect()
-        else:
-            records = selected_records
-
-        # Sort records by timestamp
-        records.sort(key=lambda x: x['timestamp'], reverse=True)
-
-        # Prepare export data
-        export_data = {
-            'device_info': {
-                'ip': session.get('device_ip'),
-                'port': session.get('device_port'),
-                'export_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            },
-            'records': records
-        }
-
-        # Send data to external endpoint
-        response = requests.post(
-            export_url,
-            json=export_data,
-            verify=False  # Skip SSL verification
-        )
-
-        if response.ok:
+            conn = connect_to_device(ip, port, timeout)
+            info = conn.get_device_info()
+            
+            session['device_ip'] = ip
+            if port:
+                session['device_port'] = int(port)
+            if timeout:
+                session['device_timeout'] = int(timeout)
+            
+            conn.disconnect()
             return jsonify({
                 "status": "success", 
-                "message": "Data exported successfully",
-                "records_count": len(records)
-            })
-        else:
-            return jsonify({
-                "status": "error",
-                "message": f"Export failed: {response.text}"
-            }), 500
-
-    except Exception as e:
-        logger.error(f"Export error: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# Add system settings endpoints
-@app.route('/api/clear-data', methods=['POST'])
-@require_device_connection
-def clear_data():
-    try:
-        # Clear config files
-        for file in os.listdir(CONFIG_DIR):
-            os.remove(os.path.join(CONFIG_DIR, file))
-        return jsonify({"status": "success", "message": "All data cleared successfully"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/reset-settings', methods=['POST'])
-def reset_settings():
-    try:
-        # Reset export config
-        config_file = get_config_path('export_config.json')
-        if os.path.exists(config_file):
-            os.remove(config_file)
-        return jsonify({"status": "success", "message": "Settings reset successfully"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# UI Endpoints
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/connect', methods=['GET', 'POST'])
-def connect():
-    if request.method == 'POST':
-        try:
-            data = request.get_json()
-            if not data:
-                return jsonify({"status": "error", "message": "No data provided"}), 400
-            
-            # Get connection parameters
-            ip = data.get('ip')
-            if not ip:
-                return jsonify({"status": "error", "message": "IP address is required"}), 400
-            
-            try:
-                port = int(data.get('port', 4370))
-                timeout = int(data.get('timeout', 5))
-            except ValueError:
-                return jsonify({"status": "error", "message": "Port and timeout must be numbers"}), 400
-            
-            # Store connection details in session
-            session['device_ip'] = ip
-            session['device_port'] = port
-            session['device_timeout'] = timeout
-            
-            # Try to connect to the device
-            logger.info(f"Attempting to connect to device at {ip}:{port}")
-            try:
-                zk = ZK(ip, port=port, timeout=timeout)
-                conn = zk.connect()
-                
-                # Get basic device info
-                device_info = {
-                    "firmware_version": conn.get_firmware_version(),
-                    "serial_number": "Unknown",  # Not directly available
-                    "platform": "ZKTeco Device",
-                    "oem_vendor": "ZKTeco",
-                    "mac": "Unknown"  # Not directly available
+                "message": f"Successfully connected to device at {ip}",
+                "device_info": {
+                    "serial_number": info.serial_number,
+                    "firmware_version": info.firmware_version
                 }
-                
-                # Try to get additional info if available
-                try:
-                    device_info["serial_number"] = conn.get_serialnumber()
-                except:
-                    pass
-                
-                # Disconnect
-                conn.disconnect()
-                
-                logger.info(f"Successfully connected to device: {device_info}")
-                
-                return jsonify({
-                    "status": "success",
-                    "message": "Successfully connected to device",
-                    "device_info": device_info
-                })
-            except Exception as e:
-                logger.error(f"Failed to connect to device: {str(e)}")
-                return jsonify({
-                    "status": "error",
-                    "message": f"Failed to connect to device: {str(e)}"
-                }), 400
+            })
         except Exception as e:
-            logger.error(f"Error in connect endpoint: {str(e)}")
-            return jsonify({
-                "status": "error",
-                "message": f"Error processing request: {str(e)}"
-            }), 500
-    
-    return render_template('connect.html')
-
-@app.route('/disconnect')
-def disconnect():
-    # Clear session data
-    session.pop('device_ip', None)
-    session.pop('device_port', None)
-    session.pop('device_timeout', None)
-    
-    return redirect(url_for('index'))
-
-@app.route('/device')
-def device():
-    return render_template('device.html')
-
-@app.route('/users')
-def users():
-    return render_template('users.html')
-
-@app.route('/export')
-def export():
-    return render_template('export.html')
-
-@app.route('/settings')
-def settings():
-    return render_template('settings.html')
-
-# Add API endpoint for config
-@app.route('/api/config', methods=['GET', 'POST'])
-def api_config():
-    config_file = 'export_config.json'
-    
-    if request.method == 'POST':
-        try:
-            data = request.get_json()
-            
-            # Validate required fields
-            if not data.get('attendance_api_url'):
-                return jsonify({"status": "error", "message": "Attendance API URL is required"}), 400
-                
-            if not data.get('export_url'):
-                return jsonify({"status": "error", "message": "Export API URL is required"}), 400
-            
-            # Read existing config if available
-            try:
-                with open(config_file, 'r') as f:
-                    config = json.load(f)
-            except:
-                config = {}
-            
-            # Update config with new values
-            config['attendance_api_url'] = data.get('attendance_api_url')
-            config['export_url'] = data.get('export_url')
-            config['api_token'] = data.get('api_token', '')
-            
-            # Save updated config
-            with open(config_file, 'w') as f:
-                json.dump(config, f)
-            
-            return jsonify({"status": "success", "message": "Configuration saved successfully"})
-            
-        except Exception as e:
-            return jsonify({"status": "error", "message": f"Failed to save configuration: {str(e)}"}), 500
-    
-    # GET request - return current config
-    try:
-        with open(config_file, 'r') as f:
-            config = json.load(f)
-        return jsonify(config)
+            logger.error(f"Connection error: {str(e)}")
+            return jsonify({"status": "error", "message": str(e)}), 500
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Failed to load configuration: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route('/api/send-attendance', methods=['POST'])
 @require_device_connection
 def send_attendance():
     try:
+        from datetime import datetime
         # Get request parameters
         data = request.get_json()
         if not data:
             return jsonify({"status": "error", "message": "No data provided"}), 400
             
-        # Read API URL from config file
-        api_url = None
-        try:
-            with open('export_config.json', 'r') as f:
-                config = json.load(f)
-                if 'attendance_api_url' in config:
-                    api_url = config['attendance_api_url']
-                    logger.info(f"Using attendance API URL from config: {api_url}")
-        except Exception as e:
-            logger.warning(f"Could not read export_config.json: {str(e)}")
+        # Read API URL from config using the get_config function
+        config = get_config()
+        api_url = config.get('attendance_api_url')
+        logger.info(f"Retrieved config from get_config() function")
+        
+        # Placeholder for API logic - will be implemented below
+
+        if api_url:
+            logger.info(f"Using attendance API URL from config: {api_url}")
+        else:
+            logger.warning("API URL not found in configuration")
         
         # Validate API URL
         if not api_url:
-            return jsonify({"status": "error", "message": "No API URL configured. Please set 'attendance_api_url' in export_config.json"}), 400
+            return jsonify({"status": "error", "message": "No API URL configured. Please set 'attendance_api_url' in config.json. Application directory: " + base_dir}), 400
             
         # Validate URL format
         if not api_url.startswith(('http://', 'https://')):
@@ -744,7 +456,7 @@ def send_attendance():
             for record in filtered_records:
                 formatted_record = {
                     "emp_no": int(record.user_id),  # Convert to integer
-                    "device_id": "FHGI9983",  # Use the specified device ID
+                    "device_id": "111",  # Use the specified device ID
                     "punch_type": get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
                     "punch_date": record.timestamp.strftime('%Y-%m-%d'),
                     "punch_time": record.timestamp.strftime('%Y-%m-%d %H:%M:%S')
@@ -793,6 +505,19 @@ def send_attendance():
                         response_data = response.text
                         logger.info(f"Response is not JSON: {response_data[:500]}")
                     
+                    # Save last_successful_send info to config.json
+                    last_send_info = {
+                        "last_send_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "last_send_data": {
+                            "count": len(formatted_records),
+                            "summary": f"Sent {len(formatted_records)} records",
+                            "records_preview": formatted_records[:10]  # Store up to 10 records for display
+                        }
+                    }
+                    config['last_successful_send'] = last_send_info
+                    save_config(config)
+                    logger.info("last_successful_send updated in config.json after batch send")
+                    
                     # Consider any 2xx response as success
                     return jsonify({
                         "status": "success",
@@ -805,6 +530,7 @@ def send_attendance():
                     logger.warning(f"Batch request failed with status {response.status_code}, trying individual records")
                     
                     successful_records = 0
+                    successful_records_list = []  # Store the actual successful records
                     failed_records = []
                     
                     for index, record in enumerate(formatted_records):
@@ -829,6 +555,7 @@ def send_attendance():
                             
                             if single_response.status_code in (200, 201, 202):
                                 successful_records += 1
+                                successful_records_list.append(record)  # Store the successful record
                                 logger.info(f"Successfully sent record for emp_no {record['emp_no']}")
                             else:
                                 logger.warning(f"Failed to send record for emp_no {record['emp_no']}: {single_response.status_code}")
@@ -849,6 +576,19 @@ def send_attendance():
                         time.sleep(0.5)
                     
                     if successful_records > 0:
+                        # Save last_successful_send info to config.json for individual records
+                        last_send_info = {
+                            "last_send_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            "last_send_data": {
+                                "count": successful_records,
+                                "summary": f"Sent {successful_records} out of {len(formatted_records)} records individually",
+                                "records_preview": successful_records_list[:10]  # Store up to 10 records for display
+                            }
+                        }
+                        config['last_successful_send'] = last_send_info
+                        save_config(config)
+                        logger.info("last_successful_send updated in config.json after individual sends")
+                        
                         return jsonify({
                             "status": "partial_success",
                             "message": f"Successfully sent {successful_records} out of {len(formatted_records)} attendance records to API individually",
@@ -886,235 +626,249 @@ def send_attendance():
         logger.error(error_msg)
         return jsonify({"status": "error", "message": error_msg}), 500
 
-@app.route('/api/test-api-connection', methods=['POST'])
-def test_api_connection():
+def format_attendance_record(record):
+    """Format a single attendance record for API submission."""
+    return {
+        "emp_no": int(record.user_id),
+        "device_id": "111",
+        "punch_type": get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
+        "punch_date": record.timestamp.strftime('%Y-%m-%d'),
+        "punch_time": record.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+def send_records_to_api(api_url, records, record_ids=None, is_batch=True):
+    """Send attendance records to API, either as batch or individual record."""
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    }
+    
+    payload = {
+        "data": records if is_batch else [records]
+    }
+    
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"status": "error", "message": "No data provided"}), 400
-            
-        api_url = data.get('api_url')
-        api_token = data.get('api_token')
+        logger.info(f"Sending API request to: {api_url}")
+        logger.debug(f"API request payload: {json.dumps(payload)[:200]}...")
         
-        # Read token from export_config.json if available
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=payload,
+            verify=False,  # For development environments
+            timeout=30
+        )
+        
+        logger.info(f"API response status: {response.status_code}")
         try:
-            with open('export_config.json', 'r') as f:
-                config = json.load(f)
-                if 'api_token' in config and not api_token:
-                    api_token = config['api_token']
-                    logger.info(f"Using token from export_config.json: {api_token[:10]}...")
-                if 'export_url' in config and not api_url:
-                    api_url = config['export_url']
-                    logger.info(f"Using URL from export_config.json: {api_url}")
-        except Exception as e:
-            logger.warning(f"Could not read export_config.json: {str(e)}")
+            logger.debug(f"API response content: {response.text[:200]}...")
+        except:
+            logger.debug("Could not log API response content")
         
-        # Validate parameters
-        if not api_url:
-            return jsonify({"status": "error", "message": "API URL is required"}), 400
-            
-        # Prepare test results
-        test_results = []
-        
-        # Test 1: GET request to API URL
-        try:
-            # Check if token should be in URL or in payload
-            url_has_token = "api_token=" in api_url
-            test_url = api_url
-            if not url_has_token and api_token:
-                if "?" in api_url:
-                    test_url = f"{api_url}&api_token={api_token}"
-                else:
-                    test_url = f"{api_url}?api_token={api_token}"
-            
-            logger.info(f"Testing GET request to {test_url}")
-            
-            response = requests.get(
-                test_url,
-                headers={"Accept": "application/json"},
-                verify=False,
-                timeout=10
-            )
-            
-            test_results.append({
-                "method": "GET",
-                "url": test_url,
-                "status": response.status_code,
-                "response": response.text[:200] + ("..." if len(response.text) > 200 else "")
-            })
-            
-            logger.info(f"GET test result: {response.status_code}")
-            
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"GET test error: {error_msg}")
-            test_results.append({
-                "method": "GET",
-                "url": test_url,
-                "status": "Error",
-                "response": error_msg
-            })
-        
-        # Test 2: POST request with empty payload
-        try:
-            logger.info(f"Testing POST request to {test_url} with empty payload")
-            
-            response = requests.post(
-                test_url,
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
-                json={},
-                verify=False,
-                timeout=10
-            )
-            
-            test_results.append({
-                "method": "POST (Empty)",
-                "url": test_url,
-                "status": response.status_code,
-                "response": response.text[:200] + ("..." if len(response.text) > 200 else "")
-            })
-            
-            logger.info(f"POST empty test result: {response.status_code}")
-            
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"POST empty test error: {error_msg}")
-            test_results.append({
-                "method": "POST (Empty)",
-                "url": test_url,
-                "status": "Error",
-                "response": error_msg
-            })
-        
-        # Test 3: POST request with sample payload
-        try:
-            logger.info(f"Testing POST request to {test_url} with sample payload")
-            
-            # Sample attendance record
-            sample_record = {
-                "emp_no": "12345",
-                "punch_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                "punch_type": "IN",
-                "terminal_id": "ZK",
-                "source": "ZK_DEVICE"
-            }
-            
-            # Try different payload formats
-            payloads = [
-                # Format 1: Direct array
-                ("Direct array", sample_record),
-                # Format 2: Using "attendance" key
-                ("Attendance key", {"attendance": [sample_record]}),
-                # Format 3: Using "data" key
-                ("Data key", {"data": [sample_record]}),
-                # Format 4: Using "records" key
-                ("Records key", {"records": [sample_record]})
-            ]
-            
-            # Try each payload format
-            for name, payload in payloads:
-                try:
-                    response = requests.post(
-                        test_url,
-                        headers={"Content-Type": "application/json", "Accept": "application/json"},
-                        json=payload,
-                        verify=False,
-                        timeout=10
-                    )
-                    
-                    test_results.append({
-                        "method": f"POST ({name})",
-                        "url": test_url,
-                        "status": response.status_code,
-                        "response": response.text[:200] + ("..." if len(response.text) > 200 else "")
-                    })
-                    
-                    logger.info(f"POST {name} test result: {response.status_code}")
-                    
-                except Exception as e:
-                    error_msg = str(e)
-                    logger.error(f"POST {name} test error: {error_msg}")
-                    test_results.append({
-                        "method": f"POST ({name})",
-                        "url": test_url,
-                        "status": "Error",
-                        "response": error_msg
-                    })
-            
-        except Exception as e:
-            error_msg = str(e)
-            logger.error(f"POST sample test error: {error_msg}")
-            test_results.append({
-                "method": "POST (Sample)",
-                "url": test_url,
-                "status": "Error",
-                "response": error_msg
-            })
-        
-        # Determine overall status
-        success_count = sum(1 for result in test_results if isinstance(result["status"], int) and 200 <= result["status"] < 300)
-        
-        if success_count > 0:
-            overall_status = "success"
-            message = f"API connection test completed with {success_count} successful tests out of {len(test_results)}"
-        else:
-            overall_status = "error"
-            message = "API connection test failed. No successful connections established."
-        
-        return jsonify({
-            "status": overall_status,
-            "message": message,
-            "test_results": test_results,
-            "api_url": api_url
-        })
-        
+        success = response.status_code in (200, 201, 202)
+        return success, response
     except Exception as e:
-        error_msg = f"Error in test_api_connection endpoint: {str(e)}"
+        logger.error(f"API request error: {str(e)}")
+        return False, None
+
+
+@app.route('/api/add-users-from-url', methods=['POST'])
+@require_device_connection
+def add_users_from_url():
+    """Add users to the ZK device by fetching data from an API URL
+    
+    Expected request format:
+    {
+        "url": "https://example.com/api/employees?api_token=your_token_here"
+    }
+    
+    The API should return JSON data containing user records with emp_id and fpt_emp_name fields.
+    The function will add each user to the device using their emp_id as the user_id.
+    """
+    try:
+        # Get URL from request
+        data = request.get_json()
+        if not data or 'url' not in data:
+            return jsonify({"status": "error", "message": "URL is required"}), 400
+            
+        url = data['url']
+        logger.info(f"Fetching user data from URL: {url}")
+        
+        # Make the API request
+        try:
+            logger.info(f"Fetching data from URL: {url}")
+            response = requests.get(url, verify=False)
+            response.raise_for_status()
+            response_data = response.json()
+            logger.info(f"Received API response")
+
+            # Extract users from the response
+            users = []
+            
+            # Check if response is wrapped in a data object
+            if isinstance(response_data, dict):
+                if 'data' in response_data and isinstance(response_data['data'], list):
+                    users = response_data['data']
+                elif 'employees' in response_data and isinstance(response_data['employees'], list):
+                    users = response_data['employees']
+                elif 'emp_id' in response_data:
+                    # Single user in response
+                    users = [response_data]
+                else:
+                    # Try other common field names
+                    for field in ['users', 'items', 'records']:
+                        if field in response_data and isinstance(response_data[field], list):
+                            users = response_data[field]
+                            break
+            elif isinstance(response_data, list):
+                users = response_data
+
+            if not users:
+                return jsonify({"status": "error", "message": "No users data found in response"}), 400
+
+            logger.info(f"Found {len(users)} users in API response")
+
+            # Connect to device using the existing connection method
+            conn = connect_to_device()
+            
+            try:
+                # Get existing users and their user_ids
+                existing_users = conn.get_users()
+                existing_user_ids = {user.user_id: user.uid for user in existing_users}
+                used_uids = {user.uid for user in existing_users}
+                logger.info(f"Found {len(existing_users)} existing users on device")
+                
+                # Find next available uid starting from 1
+                def get_next_uid():
+                    uid = 1
+                    while uid in used_uids and uid < 65535:
+                        uid += 1
+                    if uid >= 65535:
+                        raise Exception("No available UIDs")
+                    return uid
+                
+                # Process each user
+                success_count = 0
+                failed_users = []
+                skipped_count = 0
+                
+                for user in users:
+                    try:
+                        # Skip detailed user logging to reduce console output
+                        
+                        # Get emp_id (required field)
+                        emp_id = user.get('emp_id')
+                        if not emp_id:
+                            logger.warning(f"Missing emp_id for user: {user}")
+                            failed_users.append({
+                                'emp_id': None,
+                                'name': None,
+                                'error': 'Missing emp_id field',
+                                'user_data': user
+                            })
+                            continue
+
+                        # Convert emp_id to string
+                        if not isinstance(emp_id, str):
+                            emp_id = str(emp_id)
+                        
+                        # Get name from fpt_emp_name (can be null/empty)
+                        # We'll use whatever value is provided, even if empty
+                        name = user.get('fpt_emp_name', '')
+                        if name is None:
+                            name = ''  # Ensure name is at least an empty string, not None
+                            
+                        # Convert name to string if it's not already
+                        if not isinstance(name, str):
+                            name = str(name)
+                        
+                        # Check if user_id already exists
+                        if emp_id in existing_user_ids:
+                            # User already exists, skip without detailed logging
+                            skipped_count += 1
+                            continue
+                        
+                        # Get next available uid
+                        new_uid = get_next_uid()
+                        used_uids.add(new_uid)
+                        
+                        # Add new user to device
+                        conn.set_user(
+                            uid=new_uid,
+                            name=name,
+                            privilege=0,  # Use 0 for normal user
+                            password='',
+                            group_id='',
+                            user_id=emp_id
+                        )
+                        # User added successfully
+                        success_count += 1
+                        existing_user_ids[emp_id] = new_uid
+                        
+                    except Exception as e:
+                        error_msg = str(e)
+                        logger.error(f"Error processing user: {error_msg}")
+                        failed_users.append({
+                            'emp_id': emp_id if 'emp_id' in locals() else None,
+                            'name': name if 'name' in locals() else None,
+                            'error': error_msg,
+                            'user_data': user
+                        })
+            finally:
+                # Always disconnect from device
+                conn.disconnect()
+                logger.info("Device disconnected")
+            
+            # Return results
+            return jsonify({
+                "status": "success" if success_count > 0 else "error",
+                "message": f"Added {success_count} out of {len(users)} users to the device",
+                "success_count": success_count,
+                "failed_count": len(failed_users),
+                "skipped_count": skipped_count,
+                "failed_users": failed_users
+            })
+                
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to fetch data from URL: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({"status": "error", "message": error_msg}), 500
+        except ValueError as e:
+            error_msg = f"Invalid JSON response from URL: {str(e)}"
+            logger.error(error_msg)
+            return jsonify({"status": "error", "message": error_msg}), 500
+            
+    except Exception as e:
+        error_msg = f"Unexpected error in add_users_from_url: {str(e)}"
         logger.error(error_msg)
         return jsonify({"status": "error", "message": error_msg}), 500
 
-@app.route('/api/sync', methods=['POST'])
-def sync_data():
+
+from device_manager import device_manager
+
+# Define cleanup function to ensure proper shutdown
+def cleanup_on_exit():
+    # Force save devices to ensure they persist
+    logger.info("Saving device configuration before exit")
     try:
-        logger.info("Attempting to sync data")
-        ip = request.form.get('ip', DEFAULT_IP)
-        conn = connect_to_device(ip=ip)
-        try:
-            attendance_data = [{
-                "emp_no": attendance.user_id,
-                "punch_type": get_punch_type_text(attendance.punch if hasattr(attendance, 'punch') else 0),
-                "punch_time": attendance.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-            } for attendance in conn.get_attendance()]
-            logger.info("Attendance data retrieved successfully")
-            external_api_url = "http://external-api.example.com/sync"
-            response = requests.post(external_api_url, json=attendance_data, timeout=10)
-            logger.info("Data synced successfully")
-            return jsonify({"status": "success", "external_response": response.text})
-        except Exception as e:
-            error_msg = f"Error syncing data: {str(e)}"
-            logger.error(error_msg)
-            return jsonify({"status": "error", "message": error_msg}), 500
-        finally:
-            try:
-                conn.disconnect()
-                logger.info("Device disconnected")
-            except:
-                logger.warning("Error disconnecting from device")
+        device_manager.save_devices()
+        logger.info(f"Successfully saved {len(device_manager.devices)} devices before exit")
     except Exception as e:
-        error_msg = f"Error in sync data endpoint: {str(e)}"
-        logger.error(error_msg)
-        return jsonify({"status": "error", "message": error_msg}), 500
+        logger.error(f"Error saving devices on exit: {str(e)}")
+
+# Register cleanup function to run on exit
+import atexit
+atexit.register(cleanup_on_exit)
+
+# Import routes after all app setup is complete to avoid circular imports
+from routes import *
 
 if __name__ == '__main__':
     try:
-        # Use threaded=True for better handling of termination
         app.run(debug=True, port=5000, threaded=True, use_reloader=False)
     except KeyboardInterrupt:
-        # Handle Ctrl+C gracefully
         logger.info("Application shutdown requested. Exiting...")
     except Exception as e:
-        # Log any other exceptions during startup/shutdown
         logger.error(f"Error in application: {str(e)}")
     finally:
-        # Perform any cleanup needed
         logger.info("Application shutdown complete")

@@ -1,114 +1,69 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - ZK Device Manager{% endblock %}
+{% block title %}Dashboard - ZK Attendance System{% endblock %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">الرئيسية</h1>
+        <p class="text-muted">نظرة عامة على نظام الحضور</p>
+    </div>
+</div>
+
+<!-- Dashboard Content -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card stats-card h-100 shadow-sm">
+            <div class="card-body position-relative">
+                <div class="stat-label">سجل اليوم</div>
+                <div class="stat-value" id="todayAttendance">-</div>
+                <div class="icon text-primary">
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Recent Activity -->
 <div class="row">
-    <!-- Quick Stats -->
-    <div class="col-md-4 mb-4">
-        <div class="card stats-card">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">
-                    <i class="bi bi-people"></i> Total Users
-                </h6>
-                <h2 class="card-title mb-0" id="totalUsers">...</h2>
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">النشاطات الأخيرة</h5>
+                <button id="refresh-activity" class="btn btn-sm btn-light">
+                    <i class="bi bi-arrow-clockwise"></i> تحديث
+                </button>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card stats-card">
             <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">
-                    <i class="bi bi-clock"></i> Today's Attendance
-                </h6>
-                <h2 class="card-title mb-0" id="todayAttendance">...</h2>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card stats-card">
-            <div class="card-body">
-                <h6 class="card-subtitle mb-2 text-muted">
-                    <i class="bi bi-person-check"></i> Present Today
-                </h6>
-                <h2 class="card-title mb-0" id="presentToday">...</h2>
-            </div>
-        </div>
-    </div>
-
-    <!-- Device Connection -->
-    {% if not session.get('device_ip') %}
-    <div class="col-md-12 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="text-center py-4">
-                    <h5 class="mb-3">Connect to ZK Device</h5>
-                    <p class="text-muted mb-4">
-                        You need to connect to a ZK device to start managing users and attendance.
-                    </p>
-                    <form id="connectForm" class="row justify-content-center">
-                        <div class="col-md-4">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-hdd-network"></i>
-                                </span>
-                                <input type="text" class="form-control" name="ip" 
-                                       placeholder="Device IP" value="{{ session.get('device_ip', '') }}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-ethernet"></i>
-                                </span>
-                                <input type="number" class="form-control" name="port" 
-                                       placeholder="Port" value="{{ session.get('device_port', 4370) }}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-plug"></i> Connect
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Recent Activity -->
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0">Recent Activity</h5>
-                    <button class="btn btn-primary btn-sm" onclick="loadRecentActivity()">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
-                </div>
                 <div class="table-responsive">
-                    <table class="table">
+                    <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Time</th>
-                                <th>User</th>
-                                <th>Action</th>
-                                <th>Status</th>
+                                <th>User ID</th>
+                                <th>Name</th>
+                                <th>Date & Time</th>
+                                <th>Punch Type</th>
                             </tr>
                         </thead>
-                        <tbody id="recentActivity">
-                            <tr>
-                                <td colspan="4" class="text-center py-4">
-                                    <div class="spinner-border text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody id="activity-table">
+                            <!-- Activity data will be loaded here -->
                         </tbody>
                     </table>
+                </div>
+                
+                <div id="activity-loading" class="text-center py-3 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading activity data...</p>
+                </div>
+                
+                <div id="no-activity" class="text-center py-3 d-none">
+                    <i class="bi bi-exclamation-circle text-warning fs-1"></i>
+                    <p class="mt-2">No recent activity found.</p>
                 </div>
             </div>
         </div>
@@ -118,6 +73,7 @@
 
 {% block extra_js %}
 <script>
+    // Load dashboard data
     async function loadStats() {
         try {
             const response = await fetch('/api/stats');
@@ -125,108 +81,164 @@
             
             const data = await response.json();
             if (data.status === 'success') {
-                document.getElementById('totalUsers').textContent = data.data.total_users;
-                document.getElementById('todayAttendance').textContent = data.data.today_attendance;
-                document.getElementById('presentToday').textContent = data.data.present_today;
+                // Update today's attendance count
+                const todayAttendanceEl = document.getElementById('todayAttendance');
+                if (todayAttendanceEl) {
+                    todayAttendanceEl.textContent = data.data.today_attendance;
+                }
+                
+                // Update last sync time if available
+                if (data.data.last_sync) {
+                    const lastSyncEl = document.getElementById('last-sync-time');
+                    if (lastSyncEl) {
+                        lastSyncEl.textContent = new Date(data.data.last_sync).toLocaleString();
+                    }
+                }
             } else {
                 throw new Error(data.message || 'Unknown error occurred');
             }
         } catch (error) {
-            console.error('Error:', error);
-            document.getElementById('totalUsers').textContent = 'N/A';
-            document.getElementById('todayAttendance').textContent = 'N/A';
-            document.getElementById('presentToday').textContent = 'N/A';
+            console.error('Error loading stats:', error);
+            const todayAttendanceEl = document.getElementById('todayAttendance');
+            if (todayAttendanceEl) {
+                todayAttendanceEl.textContent = 'N/A';
+            }
         }
     }
-
-    async function loadRecentActivity() {
-        const tableBody = document.getElementById('recentActivity');
+    
+    // Load device info (simplified version without connection status)
+    async function loadDeviceInfo() {
         try {
-            const response = await fetch('/api/attendance?limit=10');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
+            const response = await fetch('/api/device-info');
             const data = await response.json();
+            
+            if (data.status === 'success' || data.status === 'warning') {
+                // Update device info if elements exist
+                const deviceInfo = data.device_info || {};
+                if (document.getElementById('device-serial')) {
+                    document.getElementById('device-serial').textContent = deviceInfo.serial_number || '-';
+                }
+                if (document.getElementById('last-sync-time')) {
+                    document.getElementById('last-sync-time').textContent = 
+                        deviceInfo.last_sync ? new Date(deviceInfo.last_sync).toLocaleString() : new Date().toLocaleString();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading device info:', error);
+        }
+    }
+    
+    // Load recent activity
+    async function loadRecentActivity() {
+        try {
+            const activityTable = document.getElementById('activity-table');
+            const loadingIndicator = document.getElementById('activity-loading');
+            const noActivity = document.getElementById('no-activity');
+            
+            if (!activityTable || !loadingIndicator || !noActivity) return;
+            
+            // Clear previous data
+            activityTable.innerHTML = '';
+            
+            // Show loading indicator
+            loadingIndicator.classList.remove('d-none');
+            noActivity.classList.add('d-none');
+            
+            const response = await fetch('/api/attendance');
+            const data = await response.json();
+            
+            loadingIndicator.classList.add('d-none');
+            
             if (data.status === 'success') {
-                const records = data.data;
+                const records = data.attendance || [];
                 
-                if (!records || records.length === 0) {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="text-center">No recent activity</td>
-                        </tr>
-                    `;
+                if (records.length === 0) {
+                    noActivity.classList.remove('d-none');
                     return;
                 }
-
-                tableBody.innerHTML = records.map(record => `
-                    <tr>
-                        <td>${record.timestamp}</td>
-                        <td>${record.user_id}</td>
-                        <td>
-                            <span class="badge bg-${record.punch === 'Check In' ? 'success' : 'primary'}">
-                                ${record.punch}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-${record.status ? 'success' : 'secondary'}">
-                                ${record.status || 'N/A'}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
+                
+                // Sort records by timestamp (newest first)
+                const sortedRecords = [...records].sort((a, b) => {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+                
+                // Display only the most recent 10 records
+                const recentRecords = sortedRecords.slice(0, 10);
+                
+                recentRecords.forEach(record => {
+                    const row = document.createElement('tr');
+                    
+                    // User ID
+                    const userIdCell = document.createElement('td');
+                    userIdCell.textContent = record.user_id;
+                    row.appendChild(userIdCell);
+                    
+                    // Name
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = record.name || 'Unknown';
+                    row.appendChild(nameCell);
+                    
+                    // Date & Time
+                    const timeCell = document.createElement('td');
+                    const time = new Date(record.timestamp);
+                    timeCell.textContent = time.toLocaleString();
+                    row.appendChild(timeCell);
+                    
+                    // Punch Type
+                    const typeCell = document.createElement('td');
+                    const punchValue = record.punch;
+                    let badgeClass = 'bg-secondary';
+                    let punchText = 'Unknown';
+                    
+                    if (punchValue === 0 || punchValue === '0') {
+                        badgeClass = 'bg-success';
+                        punchText = 'Check In';
+                    } else if (punchValue === 1 || punchValue === '1') {
+                        badgeClass = 'bg-danger';
+                        punchText = 'Check Out';
+                    }
+                    
+                    typeCell.innerHTML = `<span class="badge ${badgeClass}">${punchText}</span>`;
+                    row.appendChild(typeCell);
+                    
+                    activityTable.appendChild(row);
+                });
             } else {
-                throw new Error(data.message || 'Unknown error occurred');
+                noActivity.classList.remove('d-none');
             }
         } catch (error) {
-            console.error('Error:', error);
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center text-danger">
-                        <i class="bi bi-exclamation-triangle"></i> Error loading activity
-                        <button class="btn btn-sm btn-primary ms-3" onclick="loadRecentActivity()">
-                            <i class="bi bi-arrow-clockwise"></i> Retry
-                        </button>
-                    </td>
-                </tr>
-            `;
+            console.error('Error loading recent activity:', error);
+            document.getElementById('activity-loading').style.display = 'none';
+            document.getElementById('no-activity').classList.remove('d-none');
+            
+            if (document.getElementById('no-activity')) {
+                document.getElementById('no-activity').innerHTML = `
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <p class="mt-2">Error loading activity: ${error.message}</p>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="loadRecentActivity()">
+                        <i class="bi bi-arrow-clockwise"></i> Retry
+                    </button>
+                `;
+            }
         }
     }
-
-    // Handle device connection
-    document.getElementById('connectForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        
-        try {
-            const response = await fetch('/connect', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const result = await response.json();
-            if (result.status === 'success') {
-                showNotification('Connected to device successfully');
-                window.location.reload();
-            } else {
-                throw new Error(result.message || 'Unknown error occurred');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showNotification('Failed to connect to device: ' + error.message, 'danger');
-        }
-    });
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', () => {
+        // Load data
         loadStats();
+        loadDeviceInfo();
         loadRecentActivity();
+        
+        // Set up refresh buttons
+        document.getElementById('refresh-activity')?.addEventListener('click', loadRecentActivity);
+
+        
+        // Update last sync time
+        const lastSyncTime = document.getElementById('last-sync-time');
+        if (lastSyncTime) {
+            lastSyncTime.textContent = new Date().toLocaleString();
+        }
     });
 </script>
 {% endblock %}

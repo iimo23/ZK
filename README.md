@@ -1,110 +1,133 @@
 # ZK Attendance System
 
-A modern web interface for managing ZK biometric devices, featuring real-time attendance tracking, user management, and data export capabilities.
+A streamlined system for connecting to ZK biometric devices, retrieving attendance data, and automatically synchronizing it with external APIs.
 
-## Features
+## Core Functionality
 
-- **Real-time Dashboard**
-  - Device connection status
-  - User statistics
-  - Recent activity feed
-  - Dynamic activity filtering
+- **Device Connection**
+  - Connect to ZK biometric devices
+  - Retrieve device information
+  - Get users from the device
+  - Get attendance records from the device
 
-- **User Management**
-  - View all users
-  - Add/Delete users
-  - View user attendance history
-  - Bulk user operations
+- **API Integration**
+  - Send attendance data to external API
+  - Format records according to API requirements
+  - Handle API responses and errors
+  - Support for batch and individual record sending
 
-- **Activity Monitoring**
-  - Real-time attendance tracking
-  - Filter by date range
-  - Filter by user
-  - Filter by punch type (Check In/Out)
-  - Advanced search capabilities
+- **Automatic Synchronization**
+  - Background scheduler that runs every minute
+  - Sync attendance data to API
+  - Track which records have been sent to avoid duplicates
+  - Filter records by date
 
-- **Data Export**
-  - Customizable data export
-  - Date range selection
-  - User selection
-  - Preview before export
-  - Auto-export capability
-  - Custom endpoint configuration
-
-- **Settings Management**
-  - Device configuration
-  - Export settings
-  - System maintenance
+- **Web Interface**
+  - Endpoints for device connection
+  - Endpoints for viewing and exporting data
+  - API endpoints for programmatic access
+  - User management capabilities
 
 ## Setup
 
-1. Install dependencies:
+### Prerequisites
+
+- Python 3.8 or higher
+- Network access to ZK biometric device
+- Internet connection for API synchronization
+
+### Dependencies
+
+The system relies on the following key dependencies:
+- Flask - Web framework
+- APScheduler - Background task scheduling
+- pyzk/zk - ZK device communication libraries
+- Requests - HTTP client for API integration
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/zk-attendance-system.git
+cd zk-attendance-system
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the application:
+3. Run the application:
 ```bash
 python app.py
 ```
 
-3. Access the web interface:
+4. Access the web interface:
 ```
 http://localhost:5000
 ```
 
-## Usage Guide
+### Configuration
+
+- Default device IP: 192.168.37.10
+- Default port: 4370
+- Default timeout: 5 seconds
+
+These settings can be modified through the web interface or by editing the `config.json` file.
+
+## Automatic Synchronization
+
+The system automatically synchronizes attendance data with the configured API endpoint using a background scheduler. This ensures that all attendance records are promptly sent to your external system.
+
+Key features of the synchronization:
+- Runs in the background using APScheduler
+- Tracks which records have been sent using a set (`sync_records_sent`) to avoid duplicates
+- Supports both batch sending and individual record sending
+- Falls back to individual record sending if batch sending fails
+- Logs all sync activities for troubleshooting
+- Filters records by date to ensure only relevant data is sent
+
+## System Architecture
+
+The ZK Attendance System is built around a Flask web application with the following components:
 
 ### 1. Device Connection
 
-1. Click Settings in the navigation bar
-2. Enter device IP and Port
-3. Click "Save Device Settings"
-4. The connection status will be shown in the navigation bar
+The system connects to ZK biometric devices using the `zk` library. The connection is managed through:
+- Direct IP connection with configurable port and timeout
+- Device manager for handling multiple devices
+- Connection status tracking
 
 ### 2. User Management
 
-Access the Users page to:
-- View all registered users
-- Add new users
-- Delete existing users
-- View individual user attendance history
+The system provides APIs for:
+- Retrieving users from the device
+- Adding new users to the device
+- Adding users in bulk from an external API URL
+- Deleting users from the device
 
-### 3. Activity Monitoring
+### 3. Attendance Data Processing
 
-The dashboard provides:
-- Real-time activity feed
-- Multiple filtering options:
-  - Date filters (Today, This Week, This Month)
-  - User search
-  - Punch type filters
-- Automatic refresh
+The system processes attendance data by:
+- Retrieving raw attendance records from the device
+- Formatting records with proper date/time and punch type information
+- Organizing records by user and date
+- Filtering records based on date ranges
 
-### 4. Data Export
+### 4. API Integration
 
-The Export page allows you to:
-1. Select date range:
-   - Quick selections (Today, This Week, This Month)
-   - Custom date range
-2. Select users:
-   - Individual users
-   - Multiple users
-   - All users
-3. Preview data before export
-4. Export to external system
+The system integrates with external APIs by:
+- Formatting attendance records according to API requirements
+- Supporting batch and individual record sending
+- Handling API responses and errors
+- Tracking sent records to avoid duplicates
 
-### 5. Settings
+### 5. Background Scheduler
 
-The Settings page provides:
-1. Device Settings:
-   - IP Address
-   - Port number
-2. Export Settings:
-   - Export URL configuration
-   - Auto-export toggle
-3. System Settings:
-   - Clear data
-   - Reset settings
+The system uses APScheduler to:
+- Run synchronization tasks in the background
+- Schedule regular attendance data syncs
+- Track synchronization status and history
 
 ## API Endpoints
 
@@ -125,17 +148,17 @@ Connect to a device with specified IP and port.
 ```
 GET /api/users
 ```
-Returns list of all users.
+Returns list of all users from the connected device.
 
 ```
 POST /api/user
 ```
-Add a new user.
+Add a new user to the device.
 
 ```
-DELETE /api/user/<user_id>
+POST /api/add-users-from-url
 ```
-Delete a user.
+Add multiple users to the device by fetching data from an external API URL.
 
 ### Attendance Management
 
@@ -147,7 +170,15 @@ Get attendance records with optional filters:
 - end_date
 - emp_no
 
-### Export Management
+```
+POST /api/send-attendance
+```
+Send attendance data to the configured API endpoint with filters:
+- start_date
+- end_date
+- emp_no
+
+### Configuration Management
 
 ```
 GET /api/export-config
@@ -165,41 +196,49 @@ Update export configuration:
 }
 ```
 
-```
-POST /api/export-attendance
-```
-Export attendance data to configured endpoint.
-
-### Settings Management
-
-```
-POST /api/clear-data
-```
-Clear all stored data.
-
-```
-POST /api/reset-settings
-```
-Reset all settings to default.
-
 ## Data Formats
 
-### Export Data Format
+### Attendance Record Format
+
+Each attendance record is formatted for API submission as follows:
+
+```json
+{
+  "employee_id": "123",
+  "employee_name": "John Doe",
+  "timestamp": "2025-05-04 09:00:00",
+  "date": "2025-05-04",
+  "time": "09:00:00",
+  "punch_type": "Check In"
+}
+```
+
+### Batch Export Format
+
+When sending multiple records in a batch:
 
 ```json
 {
   "device_info": {
-    "ip": "192.168.1.100",
+    "ip": "192.168.37.10",
     "port": 4370,
-    "export_time": "2025-02-25 17:49:13"
+    "export_time": "2025-05-04 17:49:13"
   },
   "records": [
     {
       "employee_id": "123",
       "employee_name": "John Doe",
-      "timestamp": "2025-02-25 09:00:00",
-      "date": "2025-02-25",
+      "timestamp": "2025-05-04 09:00:00",
+      "date": "2025-05-04",
       "time": "09:00:00",
+      "punch_type": "Check In"
+    },
+    {
+      "employee_id": "456",
+      "employee_name": "Jane Smith",
+      "timestamp": "2025-05-04 09:15:00",
+      "date": "2025-05-04",
+      "time": "09:15:00",
       "punch_type": "Check In"
     }
   ]
@@ -224,26 +263,45 @@ Common HTTP status codes:
 - 401: Unauthorized (Device not connected)
 - 500: Server Error
 
-## Security Notes
+## Implementation Details
 
-1. Device connection information is stored in server-side session
-2. SSL verification is disabled for export endpoints
-3. No authentication is required for the web interface
-4. API tokens are not required for data export
+1. **Device Connection**
+   - Uses the ZK library to communicate with biometric devices
+   - Supports connection via IP address and port
+   - Handles connection timeouts and errors
+   - Maintains connection state
+
+2. **Record Tracking**
+   - Uses a set (`sync_records_sent`) to track which records have been sent
+   - Prevents duplicate record submission
+   - Maintains record history
+
+3. **Background Scheduler**
+   - Uses APScheduler for background tasks
+   - Runs synchronization tasks automatically
+   - Handles scheduler shutdown on application exit
+
+4. **Logging**
+   - Comprehensive logging system
+   - Logs device connections, data retrieval, and API interactions
+   - Logs errors and exceptions for troubleshooting
 
 ## Troubleshooting
 
 1. Device Connection Issues:
-   - Verify IP address and port
+   - Verify IP address and port in config.json
    - Check network connectivity
    - Ensure device is powered on
+   - Check the application logs for connection errors
 
-2. Export Issues:
-   - Verify export URL is correct
+2. API Integration Issues:
+   - Verify export URL is correct in export_config.json
    - Check endpoint availability
-   - Review response messages
+   - Review response messages in the logs
+   - Ensure proper data format is being sent
 
-3. Data Issues:
-   - Clear data and reconnect device
-   - Reset settings if configuration is corrupted
-   - Check device time synchronization
+3. Synchronization Issues:
+   - Check if the scheduler is running
+   - Verify that records are being retrieved from the device
+   - Check for API errors in the logs
+   - Ensure the system clock is synchronized
