@@ -5,10 +5,22 @@ import os
 import json
 import requests
 from datetime import datetime, timedelta
+from flask import jsonify, request
 
 # Import app but not the other functions to avoid circular imports
 from app import app, logger, connect_to_device, get_config, save_config
 from device_manager import device_manager
+
+@app.route('/api/employees-api-url', methods=['GET'])
+def get_employees_api_url():
+    """Get the employees API URL from config"""
+    try:
+        config = get_config()
+        employees_api_url = config.get('employees_api_url', '')
+        return jsonify({"status": "success", "employees_api_url": employees_api_url})
+    except Exception as e:
+        logger.error(f"Error getting employees API URL: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Global variable to track last sync timestamp
 last_sync_timestamp = None
@@ -580,26 +592,31 @@ def config_settings_api():
             logger.info(f"Received API config data: {data}")
             if not data:
                 return jsonify({"status": "error", "message": "No data provided"}), 400
-            
+
             # Get current config
             config = get_config()
-            
-            # Update API URL if provided
-            if 'attendance_api_url' in data:
-                config['attendance_api_url'] = data['attendance_api_url']
-            
-            # Update API Key if provided
-            if 'api_key' in data:
-                config['api_key'] = data['api_key']
-            
-            # Update auto sync setting if provided
-            if 'auto_sync' in data:
-                config['auto_sync'] = data['auto_sync']
-            
+
+            # Extract base_api_url and api_token from the request
+            base_api_url = data.get('base_api_url', '').rstrip('/')
+            api_token = data.get('api_token', '')
+
+            if not base_api_url or not api_token:
+                return jsonify({"status": "error", "message": "Both base_api_url and api_token are required."}), 400
+
+            # Store base_api_url and api_token in config
+            config['base_api_url'] = base_api_url
+            config['api_token'] = api_token
+
+            # Construct new API URLs
+            attendance_api_url = f"{base_api_url}/attendance?token={api_token}"
+            employees_api_url = f"{base_api_url}/employees?token={api_token}"
+            config['attendance_api_url'] = attendance_api_url
+            config['employees_api_url'] = employees_api_url
+
             # Save updated config
             logger.info(f"Updated config before saving: {config}")
             save_config(config)
-            
+
             return jsonify({
                 "status": "success",
                 "message": "Configuration saved successfully"

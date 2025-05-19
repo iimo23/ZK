@@ -53,88 +53,132 @@ logging.getLogger('werkzeug').setLevel(logging.WARNING)
 DEFAULT_PORT = 4370
 DEFAULT_TIMEOUT = 5
 
-# Define the exact path to config.json and devices.json
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
-DEVICES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'devices.json')
+# Define the path to the SAS_attendance folder on D: drive for executable mode
+# or use the current directory for development mode
+def get_config_dir():
+    # Check if running as executable (PyInstaller sets this attribute)
+    if getattr(sys, 'frozen', False):
+        # Disable logging when running as executable
+        for handler in logger.handlers[:]:  # Make a copy of the list to avoid modification during iteration
+            logger.removeHandler(handler)
+        
+        # Running as executable - use D:\SAS_attendance\
+        config_dir = os.path.join('D:\\', 'SAS_attendance')
+        # Create the directory if it doesn't exist
+        if not os.path.exists(config_dir):
+            try:
+                os.makedirs(config_dir)
+            except Exception:
+                pass  # Silently handle errors when running as executable
+        return config_dir
+    else:
+        # Running in development mode - use current directory
+        return os.path.dirname(os.path.abspath(__file__))
 
-# Create config directory if it doesn't exist
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), 'config')
-if not os.path.exists(CONFIG_DIR):
-    os.makedirs(CONFIG_DIR)
+# Get the appropriate config directory
+APP_CONFIG_DIR = get_config_dir()
+
+# Define the exact path to config.json and devices.json
+CONFIG_PATH = os.path.join(APP_CONFIG_DIR, 'config.json')
+DEVICES_PATH = os.path.join(APP_CONFIG_DIR, 'devices.json')
+
+# No need to create additional config directory since we handle it in get_config_dir()
 
 def get_config():
     """Get configuration from config.json file
     
     If the config file doesn't exist, creates it with default values
+    When running as executable, only stores essential information
     """
     # Use the global CONFIG_PATH
     config_file = CONFIG_PATH
-    logger.info(f"Loading config from: {config_file}")
     
-    # Get registered devices if available
-    registered_devices = {}
-    devices_file = os.path.join(os.path.dirname(__file__), 'devices.json')
-    logger.info(f"Checking for legacy devices file at: {devices_file}")
-    if os.path.exists(devices_file):
-        try:
-            with open(devices_file, 'r') as f:
-                registered_devices = json.load(f)
-            logger.info(f"Loaded {len(registered_devices)} devices from legacy file")
-        except Exception as e:
-            logger.error(f"Error reading devices file: {str(e)}")
+    # Only log in development mode
+    if not getattr(sys, 'frozen', False):
+        logger.info(f"Loading config from: {config_file}")
     
-    # Default configuration
+    # Define all expected fields and their defaults
     default_config = {
-        "attendance_api_url": "",  # Empty by default, will be set during first-time setup
-        "registered_devices": registered_devices,
-        "first_run": True  # Flag to indicate first-time run
+        'registered_devices': {},
+        'active_device': '',
+        'attendance_api_url': '',
+        'employees_api_url': '',
+        'last_successful_send': {
+            'last_send_time': '',
+            'last_send_data': {
+                'count': 0,
+                'summary': ''
+            }
+        },
+        'base_api_url': '',
+        'api_token': ''
     }
-    
+
+    config = default_config.copy()
     if os.path.exists(config_file):
         try:
             with open(config_file, 'r') as f:
-                config = json.load(f)
-                
-                # If config exists but doesn't have registered_devices, add them
-                if "registered_devices" not in config and registered_devices:
-                    config["registered_devices"] = registered_devices
-                    save_config(config)
-                    
-                return config
+                loaded = json.load(f)
+                # Merge loaded config with defaults
+                for k, v in default_config.items():
+                    if k in loaded:
+                        config[k] = loaded[k]
         except Exception as e:
-            logger.error(f"Error reading config file: {str(e)}")
-            # If there's an error reading the file, create a new one with defaults
-            logger.info("Creating new config file with default values")
-            save_config(default_config)
-            return default_config
-    else:
-        # First time running the app, create the config file
-        logger.info("Config file not found. Creating with default values")
-        save_config(default_config)
-        return default_config
+            logger.error(f"Error loading config: {str(e)}")
+    # Save config if missing any keys (migration)
+    if not os.path.exists(config_file) or any(k not in loaded for k in default_config):
+        save_config(config)
+    return config
 
 def save_config(config):
-    """Save configuration to config.json file"""
+    """Save configuration to config.json file
+    
+    When running as executable, always save all expected fields, including new ones.
+    """
     # Use the global CONFIG_PATH
     config_file = CONFIG_PATH
-    logger.info(f"Saving config to: {config_file}")
     
+    # Only log in development mode
+    if not getattr(sys, 'frozen', False):
+        logger.info(f"Saving config to: {config_file}")
+    # Always include all fields
+    default_config = {
+        'registered_devices': {},
+        'active_device': '',
+        'attendance_api_url': '',
+        'employees_api_url': '',
+        'last_successful_send': {
+            'last_send_time': '',
+            'last_send_data': {
+                'count': 0,
+                'summary': ''
+            }
+        },
+        'base_api_url': '',
+        'api_token': ''
+    }
+    config_to_save = default_config.copy()
+    for k in default_config:
+        if k in config:
+            config_to_save[k] = config[k]
     try:
         with open(config_file, 'w') as f:
-            json.dump(config, f, indent=4)
+            json.dump(config_to_save, f, indent=4)
             f.flush()
             os.fsync(f.fileno())  # Force write to disk
-        logger.info(f"Config saved successfully to {config_file}")
+        if not getattr(sys, 'frozen', False):
+            logger.info(f"Config saved successfully to {config_file}")
     except Exception as e:
-        logger.error(f"Error saving config file: {str(e)}")
-        raise
+        if not getattr(sys, 'frozen', False):
+            logger.error(f"Error saving config file: {str(e)}")
+        # Don't raise exception in executable mode
+        if not getattr(sys, 'frozen', False):
+            raise
 
 def connect_to_device(device_id=None):
     """Connect to ZK device using the device manager
     
-    Works both inside and outside of Flask request context.
-    If device_id is provided, it will connect to that specific device.
-    Otherwise, it will use the active device from the device manager.
+    
     """
     # Import here to avoid circular imports
     from device_manager import device_manager
@@ -291,10 +335,15 @@ def get_attendance():
                 filtered_records = [r for r in filtered_records if str(r.user_id) == emp_no]
             
             formatted_records = []
+            # Fetch all users and build a user_id-to-name map
+            users = conn.get_users()
+            user_map = {user.user_id: user.name for user in users}
+
             for record in filtered_records:
                 formatted_records.append({
                     "user_id": record.user_id,
                     "timestamp": record.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                    "name": user_map.get(record.user_id, "Unknown"),
                     "punch": get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
                     "status": record.status if hasattr(record, 'status') else 0,
                     "punch_type": record.punch if hasattr(record, 'punch') else 0
@@ -456,7 +505,7 @@ def send_attendance():
             for record in filtered_records:
                 formatted_record = {
                     "emp_no": int(record.user_id),  # Convert to integer
-                    "device_id": "111",  # Use the specified device ID
+                    "device_id": "11",  # Use the specified device ID
                     "punch_type": get_punch_type_text(record.punch if hasattr(record, 'punch') else 0),
                     "punch_date": record.timestamp.strftime('%Y-%m-%d'),
                     "punch_time": record.timestamp.strftime('%Y-%m-%d %H:%M:%S')
@@ -510,8 +559,7 @@ def send_attendance():
                         "last_send_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "last_send_data": {
                             "count": len(formatted_records),
-                            "summary": f"Sent {len(formatted_records)} records",
-                            "records_preview": formatted_records[:10]  # Store up to 10 records for display
+                            "summary": f"Sent {len(formatted_records)} records"
                         }
                     }
                     config['last_successful_send'] = last_send_info
@@ -581,8 +629,7 @@ def send_attendance():
                             "last_send_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                             "last_send_data": {
                                 "count": successful_records,
-                                "summary": f"Sent {successful_records} out of {len(formatted_records)} records individually",
-                                "records_preview": successful_records_list[:10]  # Store up to 10 records for display
+                                "summary": f"Sent {successful_records} out of {len(formatted_records)} records individually"
                             }
                         }
                         config['last_successful_send'] = last_send_info

@@ -81,9 +81,34 @@ for handler in logging.getLogger().handlers:
     if isinstance(handler, logging.StreamHandler) and handler.stream == sys.stdout:
         logger.setLevel(logging.WARNING)
 
+# Define the path to the SAS_attendance folder on D: drive for executable mode
+# or use the current directory for development mode
+def get_config_dir():
+    # Check if running as executable (PyInstaller sets this attribute)
+    if getattr(sys, 'frozen', False):
+        # Disable logging when running as executable
+        for handler in logger.handlers[:]:  # Make a copy of the list to avoid modification during iteration
+            logger.removeHandler(handler)
+            
+        # Running as executable - use D:\SAS_attendance\
+        config_dir = os.path.join('D:\\', 'SAS_attendance')
+        # Create the directory if it doesn't exist
+        if not os.path.exists(config_dir):
+            try:
+                os.makedirs(config_dir)
+            except Exception:
+                pass  # Silently handle errors when running as executable
+        return config_dir
+    else:
+        # Running in development mode - use current directory
+        return os.path.dirname(os.path.abspath(__file__))
+
+# Get the appropriate config directory
+APP_CONFIG_DIR = get_config_dir()
+
 # Define the exact path to config.json and devices.json
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.json')
-DEVICES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'devices.json')
+CONFIG_PATH = os.path.join(APP_CONFIG_DIR, 'config.json')
+DEVICES_PATH = os.path.join(APP_CONFIG_DIR, 'devices.json')
 
 # Default device settings
 DEFAULT_IP = '192.168.1.201'
@@ -102,7 +127,10 @@ class DeviceManager:
         """Load saved devices from main config file"""
         # Use the global CONFIG_PATH
         config_file = CONFIG_PATH
-        logger.info(f"Loading devices from config file: {config_file}")
+        
+        # Only log in development mode
+        if not getattr(sys, 'frozen', False):
+            logger.info(f"Loading devices from config file: {config_file}")
         
         if os.path.exists(config_file) and os.path.getsize(config_file) > 0:
             try:
@@ -166,22 +194,30 @@ class DeviceManager:
         """Load devices from legacy devices.json file for backward compatibility"""
         # Use the global DEVICES_PATH
         devices_file = DEVICES_PATH
-        logger.info(f"Trying to load devices from legacy file: {devices_file}")
+        
+        # Only log in development mode
+        if not getattr(sys, 'frozen', False):
+            logger.info(f"Trying to load devices from legacy file: {devices_file}")
         
         if os.path.exists(devices_file):
             try:
                 with open(devices_file, 'r') as f:
                     self.devices = json.load(f)
-                logger.info(f"Loaded {len(self.devices)} devices from legacy devices.json")
+                if not getattr(sys, 'frozen', False):
+                    logger.info(f"Loaded {len(self.devices)} devices from legacy devices.json")
             except Exception as e:
-                logger.error(f"Error loading devices from legacy file: {str(e)}")
+                if not getattr(sys, 'frozen', False):
+                    logger.error(f"Error loading devices from legacy file: {str(e)}")
                 self.devices = {}
     
     def save_devices(self):
         """Save devices to main config file"""
         # Use the global CONFIG_PATH
         config_file = CONFIG_PATH
-        logger.info(f"Saving devices to config file: {config_file}")
+        
+        # Only log in development mode
+        if not getattr(sys, 'frozen', False):
+            logger.info(f"Saving devices to config file: {config_file}")
         
         try:
             # Load current config
@@ -197,7 +233,8 @@ class DeviceManager:
             # Save active device to config
             if self.active_device:
                 config['active_device'] = self.active_device
-                logger.info(f"Saving active device {self.active_device} to config")
+                if not getattr(sys, 'frozen', False):
+                    logger.info(f"Saving active device {self.active_device} to config")
             
             # Ensure the file is properly closed and flushed to disk
             with open(config_file, 'w') as f:

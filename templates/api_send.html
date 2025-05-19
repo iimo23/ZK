@@ -1,22 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}Send Attendance Data - ZK Attendance System{% endblock %}
+{% block title %}إرسال بيانات الحضور - نظام الحضور ZK{% endblock %}
 
 {% block content %}
 {% if last_send_info %}
 <div class="alert alert-info mb-4">
-    <strong>Last Successful Send:</strong><br>
-    <span><i class="bi bi-calendar-check"></i> {{ last_send_info.last_send_time|default('Not Available') }}</span><br>
-    <span><i class="bi bi-info-circle"></i> {{ last_send_info.last_send_data.summary|default('Not Available') }}</span>
+    <strong>آخر إرسال ناجح:</strong><br>
+    <span><i class="bi bi-calendar-check"></i> {{ last_send_info.last_send_time|default('غير متوفر') }}</span><br>
+    <span><i class="bi bi-info-circle"></i> {{ last_send_info.last_send_data.summary|default('غير متوفر') }}</span>
 </div>
 {% endif %}
 
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="h3 mb-0">Send Attendance Data</h1>
-        <p class="text-muted">Send attendance records to your API</p>
+        <h1 class="h3 mb-0">إرسال بيانات الحضور</h1>
+        <p class="text-muted">إرسال سجلات الحضور إلى SAS   </p>
     </div>
 </div>
+
+{% if last_send_info %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-success">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge"></i> مزامنة</h5>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="text-success">إرسال السجلات الجديدة منذ آخر إرسال ناجح</h6>
+                        <p class="mb-0">
+                            <strong>من:</strong> {{ last_send_info.last_send_time.split(' ')[0] if last_send_info.last_send_time else 'غير متوفر' }}<br>
+                            <strong>إلى:</strong> اليوم ({{ now.strftime('%Y-%m-%d') }})
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button id="quick-send-btn" class="btn btn-success btn-lg">
+                            <i class="bi bi-lightning-charge"></i> مزامنة    
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 
 <!-- Device connection status will be checked via JavaScript -->
@@ -28,12 +56,12 @@
                     <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
                 </div>
                 <div class="flex-grow-1">
-                    <h5 class="alert-heading">No Device Connected</h5>
-                    <p class="mb-0">You need to connect to a device first before sending data.</p>
+                    <h5 class="alert-heading">لا يوجد جهاز متصل</h5>
+                    <p class="mb-0">تحتاج إلى الاتصال بجهاز أولاً قبل إرسال البيانات.</p>
                 </div>
                 <div class="flex-shrink-0">
                     <a href="{{ url_for('connect') }}" class="btn btn-warning">
-                        <i class="bi bi-plug"></i> Connect Device
+                        <i class="bi bi-plug"></i> توصيل الجهاز
                     </a>
                 </div>
             </div>
@@ -45,21 +73,21 @@
     <div class="col-md-12">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Date Range Selection</h5>
+                <h5 class="mb-0">اختيار نطاق التاريخ</h5>
             </div>
             <div class="card-body">
                 <form id="date-range-form" class="row g-3">
                     <div class="col-md-5">
-                        <label for="start_date" class="form-label">Start Date</label>
+                        <label for="start_date" class="form-label">تاريخ البداية</label>
                         <input type="date" class="form-control" id="start_date" name="start_date" required>
                     </div>
                     <div class="col-md-5">
-                        <label for="end_date" class="form-label">End Date</label>
+                        <label for="end_date" class="form-label">تاريخ النهاية</label>
                         <input type="date" class="form-control" id="end_date" name="end_date" required>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-search"></i> Preview
+                            <i class="bi bi-search"></i> معاينة
                         </button>
                     </div>
                 </form>
@@ -69,18 +97,18 @@
         <!-- Data Preview -->
         <div id="data-preview" class="card shadow-sm mb-4 d-none">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Data Preview</h5>
-                <span id="record-count" class="badge bg-light text-dark">0 records</span>
+                <h5 class="mb-0">معاينة البيانات</h5>
+                <span id="record-count" class="badge bg-light text-dark">0 سجل</span>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>User ID</th>
-                                <th>Name</th>
-                                <th>Date & Time</th>
-                                <th>Punch Type</th>
+                                <th>رقم المستخدم</th>
+                                <th>الاسم</th>
+                                <th>التاريخ والوقت</th>
+                                <th>نوع التسجيل</th>
                             </tr>
                         </thead>
                         <tbody id="preview-table">
@@ -91,19 +119,19 @@
                 
                 <div id="preview-loading" class="text-center py-3 d-none">
                     <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                        <span class="visually-hidden">جاري التحميل...</span>
                     </div>
-                    <p class="mt-2">Loading attendance data...</p>
+                    <p class="mt-2">جاري تحميل بيانات الحضور...</p>
                 </div>
                 
                 <div id="no-records" class="text-center py-3 d-none">
                     <i class="bi bi-exclamation-circle text-warning fs-1"></i>
-                    <p class="mt-2">No attendance records found for the selected date range.</p>
+                    <p class="mt-2">لم يتم العثور على سجلات حضور للنطاق الزمني المحدد.</p>
                 </div>
                 
                 <div class="mt-3">
                     <button id="send-to-api" class="btn btn-success" disabled>
-                        <i class="bi bi-cloud-upload"></i> Send to API
+                        <i class="bi bi-cloud-upload"></i>مزامنة إلى SAS
                     </button>
                 </div>
             </div>
@@ -112,10 +140,10 @@
         <!-- Send Status -->
         <div id="send-status" class="card shadow-sm d-none">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Send Status</h5>
+                <h5 class="mb-0">حالة الإرسال</h5>
             </div>
             <div class="card-body" id="send-status-content">
-                <!-- Send status will be shown here -->
+                <!-- سيتم عرض حالة الإرسال هنا -->
             </div>
         </div>
     </div>
@@ -188,10 +216,8 @@
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         const apiUrlStatus = document.getElementById('api-url-status');
         
-        // Set default dates (today and yesterday)
+        // Get today's date
         const today = new Date();
-        const yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
         
         // Format dates as YYYY-MM-DD
         const formatDate = (date) => {
@@ -201,9 +227,36 @@
             return `${year}-${month}-${day}`;
         };
         
+        // Try to get last successful send date from the page
+        let lastSendDate = null;
+        // Check if last_send_info exists and has a last_send_time
+        const lastSendTimeStr = "{% if last_send_info and last_send_info.last_send_time %}{{ last_send_info.last_send_time }}{% endif %}";
+        
+        if (lastSendTimeStr) {
+            try {
+                // Parse the last send time (format: YYYY-MM-DD HH:MM:SS)
+                const lastSendTimeParts = lastSendTimeStr.split(' ')[0].split('-');
+                if (lastSendTimeParts.length === 3) {
+                    lastSendDate = new Date(
+                        parseInt(lastSendTimeParts[0]), 
+                        parseInt(lastSendTimeParts[1]) - 1, // Month is 0-indexed in JS
+                        parseInt(lastSendTimeParts[2])
+                    );
+                }
+            } catch (e) {
+                console.error('Error parsing last send date:', e);
+            }
+        }
+        
+        // If we couldn't get a valid last send date, default to yesterday
+        if (!lastSendDate) {
+            lastSendDate = new Date();
+            lastSendDate.setDate(today.getDate() - 1);
+        }
+        
         // Set default date values
         if (document.getElementById('start_date')) {
-            document.getElementById('start_date').value = formatDate(yesterday);
+            document.getElementById('start_date').value = formatDate(lastSendDate);
         }
         
         if (document.getElementById('end_date')) {
@@ -212,6 +265,112 @@
         
         // Store the current records
         let currentRecords = [];
+        
+        // Handle quick send button click
+        const quickSendBtn = document.getElementById('quick-send-btn');
+        if (quickSendBtn) {
+            quickSendBtn.addEventListener('click', async () => {
+                // Get the date values from the form
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                
+                // Show send status
+                sendStatus.classList.remove('d-none');
+                sendStatusContent.innerHTML = `
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Sending...</span>
+                            </div>
+                            <div>Sending records from ${startDate} to ${endDate}...</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Disable quick send button
+                quickSendBtn.disabled = true;
+                
+                try {
+                    // Send data to API
+                    const response = await fetch('/api/send-attendance', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            start_date: startDate,
+                            end_date: endDate
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Show result
+                    if (result.status === 'success') {
+                        // The last send time is already updated in the backend when the send is successful
+                        // We just need to update the UI to reflect the changes
+                        
+                        // Format the current date in YYYY-MM-DD format
+                        const now = new Date();
+                        const currentDate = now.getFullYear() + '-' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(now.getDate()).padStart(2, '0');
+                        const summary = `Sent ${result.records_sent || 0} records from ${startDate} to ${endDate}`;
+                        
+                        // Update the last send info on the page
+                        const lastSendInfoElement = document.querySelector('.alert.alert-info');
+                        if (lastSendInfoElement) {
+                            
+                            lastSendInfoElement.innerHTML = `
+                                <strong>Last Successful Send:</strong><br>
+                                <span><i class="bi bi-calendar-check"></i> ${currentDate}</span><br>
+                                <span><i class="bi bi-info-circle"></i> ${summary}</span>
+                            `;
+                            
+                            // Also update the form's start date to today's date for next time
+                            // This helps prepare for the next send operation
+                            if (document.getElementById('start_date')) {
+                                document.getElementById('start_date').value = formatDate(new Date());
+                            }
+                        }
+                        
+                        sendStatusContent.innerHTML = `
+                            <div class="alert alert-success">
+                                <h5><i class="bi bi-check-circle-fill me-2"></i> Success!</h5>
+                                <p>تم إرسال ${result.records_sent || 0} سجلات إلى SAS.</p>
+                                <p>تاريخ الإرسال الأخير تم تحديثه إلى: ${currentDate}</p>
+                                <p class="mb-0"><strong>API Response:</strong> ${result.message || 'Data received successfully.'}</p>
+                            </div>
+                        `;
+                        
+                        // No need to reload the page as we've updated the UI already
+                        // setTimeout(() => {
+                        //     window.location.reload();
+                        // }, 2000);
+                    } else {
+                        sendStatusContent.innerHTML = `
+                            <div class="alert alert-danger">
+                                <h5><i class="bi bi-x-circle-fill me-2"></i> Error!</h5>
+                                <p>Failed to send data to API.</p>
+                                <p class="mb-0"><strong>Error:</strong> ${result.message || 'Unknown error occurred.'}</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    // Show error
+                    sendStatusContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="bi bi-x-circle-fill me-2"></i> Error!</h5>
+                            <p>Failed to send data to API.</p>
+                            <p class="mb-0"><strong>Error:</strong> ${error.message}</p>
+                        </div>
+                    `;
+                } finally {
+                    // Re-enable quick send button
+                    quickSendBtn.disabled = false;
+                }
+            });
+        }
         
         // Load current API URL
         const loadApiUrl = async () => {
@@ -383,42 +542,171 @@
                             return new Date(b.timestamp) - new Date(a.timestamp);
                         });
                         
-                        // Display records
-                        sortedRecords.forEach(record => {
-                            const row = document.createElement('tr');
+                        // Debug: Log the first record to understand its structure
+                        if (sortedRecords.length > 0) {
+                            console.log('Record structure:', sortedRecords[0]);
+                            console.log('Record properties:');
+                            for (const key in sortedRecords[0]) {
+                                console.log(`${key}: ${sortedRecords[0][key]}`);
+                            }
+                        }
+                        
+                        // Fetch user details to get names
+                        fetch('/api/users')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    // Create a map of user IDs to names
+                                    window.userMap = {};
+                                    data.users.forEach(user => {
+                                        const userId = user.id || user.user_id || user.uid || '';
+                                        if (userId) {
+                                            window.userMap[userId] = user.name || 'Unknown';
+                                        }
+                                    });
+                                    
+                                    console.log('User map:', window.userMap);
+                                    
+                                    // After we have the user map, update the names in the table
+                                    document.querySelectorAll('#preview-table tr').forEach(row => {
+                                        const userId = row.getAttribute('data-user-id');
+                                        if (userId && window.userMap[userId]) {
+                                            const nameCell = row.querySelector('td:nth-child(2)');
+                                            if (nameCell) {
+                                                nameCell.textContent = window.userMap[userId];
+                                            }
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(error => console.error('Error fetching users:', error));
                             
-                            // User ID
-                            const userIdCell = document.createElement('td');
-                            userIdCell.textContent = record.user_id;
-                            row.appendChild(userIdCell);
+                        // Create a function to determine punch type based on the record data
+                        function determinePunchType(record) {
+                            console.log('Determining punch type for record:', record);
                             
-                            // Name
-                            const nameCell = document.createElement('td');
-                            nameCell.textContent = record.name || 'Unknown';
-                            row.appendChild(nameCell);
+                            // Check all possible properties for punch type
+                            const punchValue = record.punch !== undefined ? record.punch : 
+                                              record.status !== undefined ? record.status : 
+                                              record.type !== undefined ? record.type : 
+                                              record.punch_type !== undefined ? record.punch_type : null;
                             
-                            // Date & Time
-                            const timeCell = document.createElement('td');
-                            const time = new Date(record.timestamp);
-                            timeCell.textContent = time.toLocaleString();
-                            row.appendChild(timeCell);
+                            console.log('Found punch value:', punchValue, 'type:', typeof punchValue);
                             
-                            // Punch Type
-                            const typeCell = document.createElement('td');
-                            const punchValue = record.punch;
                             let badgeClass = 'bg-secondary';
                             let punchText = 'Unknown';
                             
-                            if (punchValue === 0 || punchValue === '0') {
+                            // First try to use the value directly if it's a string
+                            if (typeof punchValue === 'string' && punchValue.trim() !== '') {
+                                const lowerPunch = punchValue.toLowerCase();
+                                if (lowerPunch.includes('in')) {
+                                    badgeClass = 'bg-success';
+                                    punchText = 'Check In';
+                                } else if (lowerPunch.includes('out')) {
+                                    badgeClass = 'bg-danger';
+                                    punchText = 'Check Out';
+                                } else {
+                                    // If it's some other string value, just use it directly
+                                    badgeClass = 'bg-info';
+                                    punchText = punchValue;
+                                }
+                            }
+                            // Then check for numeric values
+                            else if (punchValue === 0 || punchValue === '0') {
                                 badgeClass = 'bg-success';
                                 punchText = 'Check In';
                             } else if (punchValue === 1 || punchValue === '1') {
                                 badgeClass = 'bg-danger';
                                 punchText = 'Check Out';
+                            } else if (punchValue === 2 || punchValue === '2') {
+                                badgeClass = 'bg-warning';
+                                punchText = 'Break Out';
+                            } else if (punchValue === 3 || punchValue === '3') {
+                                badgeClass = 'bg-info';
+                                punchText = 'Break In';
+                            } else if (punchValue === 4 || punchValue === '4') {
+                                badgeClass = 'bg-primary';
+                                punchText = 'Overtime In';
+                            } else if (punchValue === 5 || punchValue === '5') {
+                                badgeClass = 'bg-dark';
+                                punchText = 'Overtime Out';
                             }
                             
-                            typeCell.innerHTML = `<span class="badge ${badgeClass}">${punchText}</span>`;
+                            console.log('Determined punch text:', punchText, 'with class:', badgeClass);
+                            return { badgeClass, punchText };
+                        }
+                        
+                        // Update punch types in the table based on the current records
+                        sortedRecords.forEach((record, index) => {
+                            const userId = record.id || record.emp_id || record.user_id;
+                            if (userId) {
+                                const rows = document.querySelectorAll(`#preview-table tr[data-user-id="${userId}"]`);
+                                if (rows.length > 0) {
+                                    rows.forEach(row => {
+                                        const punchCell = row.querySelector('td:nth-child(4)');
+                                        if (punchCell) {
+                                            const { badgeClass, punchText } = determinePunchType(record);
+                                            punchCell.innerHTML = `<span class="badge ${badgeClass}">${punchText}</span>`;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                        
+                        // Display records
+                        sortedRecords.forEach(record => {
+                            const row = document.createElement('tr');
+                            
+                            // User ID - check for different possible property names
+                            const userIdCell = document.createElement('td');
+                            // This ZK device uses 'id' for user ID
+                            const userId = record.id || record.emp_id || record.user_id || (typeof record === 'object' ? Object.values(record)[0] : 'N/A');
+                            userIdCell.textContent = userId;
+                            row.appendChild(userIdCell);
+                            
+                            // Store the user ID as a data attribute for later reference
+                            row.setAttribute('data-user-id', userId);
+                            
+                            // Name - try to get from user map first, then fall back to record.name
+                            const nameCell = document.createElement('td');
+                            // If we have a user map and the user ID exists in it, use that name
+                            if (window.userMap && window.userMap[userId]) {
+                                nameCell.textContent = window.userMap[userId];
+                            } else {
+                                // Otherwise fall back to the name in the record or 'Unknown'
+                                nameCell.textContent = record.name || 'Unknown';
+                            }
+                            row.appendChild(nameCell);
+                            
+                            // Date & Time with better formatting
+                            const timeCell = document.createElement('td');
+                            const time = new Date(record.timestamp);
+                            // Format date as YYYY-MM-DD
+                            const formattedDate = time.getFullYear() + '-' + 
+                                String(time.getMonth() + 1).padStart(2, '0') + '-' + 
+                                String(time.getDate()).padStart(2, '0');
+                            timeCell.textContent = formattedDate;
+                            row.appendChild(timeCell);
+                            
+                            // Punch Type
+                            const typeCell = document.createElement('td');
+                            
+                            // Determine punch type directly from the record
+                            const { badgeClass, punchText } = determinePunchType(record);
+                            
+                            // Show the raw punch value in the tooltip for debugging
+                            const rawPunchValue = record.punch !== undefined ? record.punch : 
+                                                  record.status !== undefined ? record.status : 
+                                                  record.type !== undefined ? record.type : 
+                                                  record.punch_type !== undefined ? record.punch_type : 'N/A';
+                                                  
+                            typeCell.innerHTML = `<span class="badge ${badgeClass}" title="Raw value: ${rawPunchValue}">${punchText}</span>`;
                             row.appendChild(typeCell);
+                            
+                            // Store the timestamp as a data attribute for debugging
+                            if (record.timestamp) {
+                                row.setAttribute('data-timestamp', record.timestamp);
+                            }
                             
                             previewTable.appendChild(row);
                         });
@@ -488,7 +776,7 @@
                         sendStatusContent.innerHTML = `
                             <div class="alert alert-success">
                                 <h5><i class="bi bi-check-circle-fill me-2"></i> Success!</h5>
-                                <p>Successfully sent ${result.sent_count || currentRecords.length} records to API.</p>
+                                <p>تم إرسال ${result.sent_count || currentRecords.length} سجلات إلى SAS.</p>
                                 <p class="mb-0"><strong>API Response:</strong> ${result.message || 'Data received successfully.'}</p>
                             </div>
                         `;
